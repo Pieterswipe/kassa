@@ -1,0 +1,159 @@
+/* Verberg elementen met klasse 'verborgen' */
+.verborgen {
+  display: none !important;
+}
+
+/* Donkere overlay over het volledige scherm */
+.sd-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.sd-overlay.verborgen {
+  display: none;
+}
+
+/* Het witte betaalvenster */
+.sd-scherm {
+  background: #16213e;
+  border-radius: 16px;
+  padding: 36px;
+  width: 420px;
+  text-align: center;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sd-scherm h2 {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+}
+
+.sd-totaal-label {
+  font-size: 1.1rem;
+  color: #aaa;
+}
+
+/* Keuze knoppen (Flow A / Flow B) */
+.sd-keuze-knoppen {
+  display: flex;
+  gap: 14px;
+}
+
+.sd-flow-knop {
+  flex: 1;
+  padding: 20px 10px;
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1.8;
+  transition: background 0.2s;
+}
+
+.sd-flow-knop:hover {
+  background: #e94560;
+}
+
+.sd-flow-knop small {
+  display: block;
+  font-size: 0.78rem;
+  color: #aaa;
+}
+
+/* Swipedrinks knop op de bon */
+.sd-knop {
+  padding: 14px;
+  background: #7b2fff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sd-knop:hover {
+  background: #6320d4;
+}
+
+/* QR afbeelding */
+#sd-qr-image {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background: #fff;
+  border-radius: 10px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+/* Wachttekst met knipperende animatie */
+.sd-wacht {
+  color: #aaa;
+  animation: knipperen 1.2s infinite;
+}
+
+@keyframes knipperen {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Annuleerknop */
+.sd-annuleer {
+  padding: 10px;
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sd-annuleer:hover {
+  background: #0f3460;
+  color: #fff;
+}
+
+/* Geslaagd scherm: groen */
+.sd-success-scherm {
+  background: #1a4a2e;
+  border-radius: 12px;
+  padding: 40px;
+  color: #4cff82;
+}
+
+/* Mislukt scherm: rood */
+.sd-failed-scherm {
+  background: #4a1a1a;
+  border-radius: 12px;
+  padding: 40px;
+  color: #ff4c4c;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Groot icoon (✓ of ✗) */
+.sd-icoon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+/* Camera scanner container */
+#sd-camera {
+  border-radius: 10px;
+  overflow: hidden;
+}

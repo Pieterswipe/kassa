@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kassa</title>
+  <link rel="stylesheet" href="kassa.css">
+  <link rel="stylesheet" href="swipedrinks.css">
+</head>
+<body>
+
+  <div class="kassa">
+
+    <!-- Linkerkant: producten -->
+    <div class="producten">
+      <div class="tabs">
+        <button class="tab actief" onclick="toonCategorie('bier')">Bier</button>
+        <button class="tab" onclick="toonCategorie('frisdrank')">Frisdrank</button>
+      </div>
+
+      <div id="bier" class="categorie">
+        <button class="item-knop" onclick="voegToe('Jupiler', 2.50)">Jupiler<br>€2,50</button>
+        <button class="item-knop" onclick="voegToe('Leffe Blond', 3.00)">Leffe Blond<br>€3,00</button>
+        <button class="item-knop" onclick="voegToe('Duvel', 3.50)">Duvel<br>€3,50</button>
+        <button class="item-knop" onclick="voegToe('Stella Artois', 2.50)">Stella Artois<br>€2,50</button>
+      </div>
+
+      <div id="frisdrank" class="categorie verborgen">
+        <button class="item-knop" onclick="voegToe('Cola', 2.00)">Cola<br>€2,00</button>
+        <button class="item-knop" onclick="voegToe('Fanta', 2.00)">Fanta<br>€2,00</button>
+        <button class="item-knop" onclick="voegToe('Sprite', 2.00)">Sprite<br>€2,00</button>
+        <button class="item-knop" onclick="voegToe('Water', 1.50)">Water<br>€1,50</button>
+      </div>
+    </div>
+
+    <!-- Rechterkant: bon -->
+    <div class="bon">
+      <h2>Bon</h2>
+      <ul id="bon-lijst"></ul>
+      <div class="totaal">Totaal: <span id="totaal">€0,00</span></div>
+      <button class="afrekenen-knop" onclick="afrekenen()">Afrekenen</button>
+      <button class="sd-knop" onclick="openSwipedrinks()">Swipedrinks</button>
+      <button class="wis-knop" onclick="wisAlles()">Wis bon</button>
+    </div>
+
+  </div>
+
+  <!-- Swipedrinks betaalscherm (popup) -->
+  <div id="sd-overlay" class="sd-overlay verborgen">
+    <div class="sd-scherm">
+
+      <!-- Stap 1: Keuze -->
+      <div id="sd-keuze">
+        <h2>Swipedrinks</h2>
+        <p class="sd-totaal-label">Totaal: <strong id="sd-totaal-tokens"></strong> tokens</p>
+        <div class="sd-keuze-knoppen">
+          <button class="sd-flow-knop" onclick="flowA()">Toon QR<br><small>Klant scant met app</small></button>
+          <button class="sd-flow-knop" onclick="flowB()">Scan kaart<br><small>Bartender scant klant</small></button>
+        </div>
+        <button class="sd-annuleer" onclick="sluitSwipedrinks()">Annuleer</button>
+      </div>
+
+      <!-- Stap 2A: QR tonen aan klant -->
+      <div id="sd-qr-display" class="verborgen">
+        <h2>Laat klant scannen</h2>
+        <p class="sd-totaal-label">Totaal: <strong id="sd-totaal-qr"></strong> tokens</p>
+        <div id="sd-qr-image"></div>
+        <p id="sd-wacht-tekst" class="sd-wacht">Wachten op betaling...</p>
+        <button class="sd-annuleer" onclick="sluitSwipedrinks()">Annuleer</button>
+      </div>
+
+      <!-- Stap 2B: Camera scanner -->
+      <div id="sd-scanner" class="verborgen">
+        <h2>Scan klantenkaart</h2>
+        <div id="sd-camera"></div>
+        <p id="sd-scan-status" class="sd-wacht"></p>
+        <button class="sd-annuleer" onclick="sluitSwipedrinks()">Annuleer</button>
+      </div>
+
+      <!-- Resultaat: geslaagd -->
+      <div id="sd-success" class="verborgen sd-success-scherm">
+        <div class="sd-icoon">✓</div>
+        <h2>Betaling geslaagd!</h2>
+      </div>
+
+      <!-- Resultaat: mislukt -->
+      <div id="sd-failed" class="verborgen sd-failed-scherm">
+        <div class="sd-icoon">✗</div>
+        <h2>Betaling mislukt</h2>
+        <p id="sd-failed-boodschap"></p>
+        <button class="sd-annuleer" onclick="sluitSwipedrinks()">Sluiten</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+  <script src="kassa.js"></script>
+  <script src="swipedrinks.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: sans-serif;
+  background: #1a1a2e;
+  color: #fff;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kassa {
+  display: flex;
+  gap: 20px;
+  width: 900px;
+  height: 600px;
+}
+
+/* --- Linkerkant --- */
+.producten {
+  flex: 2;
+  background: #16213e;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #0f3460;
+  color: #aaa;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.tab.actief {
+  background: #e94560;
+  color: #fff;
+  font-weight: bold;
+}
+
+.categorie {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.categorie.verborgen {
+  display: none;
+}
+
+.item-knop {
+  padding: 20px;
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  line-height: 1.6;
+}
+
+.item-knop:hover {
+  background: #e94560;
+}
+
+/* --- Rechterkant --- */
+.bon {
+  flex: 1;
+  background: #16213e;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bon h2 {
+  font-size: 1.4rem;
+  border-bottom: 1px solid #0f3460;
+  padding-bottom: 10px;
+}
+
+#bon-lijst {
+  flex: 1;
+  list-style: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#bon-lijst li {
+  display: flex;
+  justify-content: space-between;
+  background: #0f3460;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.totaal {
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-align: right;
+  border-top: 1px solid #0f3460;
+  padding-top: 10px;
+}
+
+.afrekenen-knop {
+  padding: 14px;
+  background: #e94560;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.afrekenen-knop:hover {
+  background: #c73652;
+}
+
+.wis-knop {
+  padding: 10px;
+  background: #0f3460;
+  color: #aaa;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.wis-knop:hover {
+  background: #1a3a6e;
+  color: #fff;
+}

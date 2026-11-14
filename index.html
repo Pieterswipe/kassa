@@ -58,7 +58,7 @@
         <button id="rek-knop" class="rek-knop" onclick="rekeningKnop()">Rekening</button>
         <button class="rek-knop" onclick="toonOpenRekeningen()">Openstaande rekeningen</button>
       </div>
-      <button class="wis-knop" onclick="wisAlles()">Wis bon</button>
+      <button type="button" class="wis-knop" onclick="bonLeegmaken()">Bon leegmaken</button>
     </div>
 
   </div>
@@ -66,14 +66,20 @@
   <!-- Gsm: zwevende capsule, bevestigingen en waas achter de lade (capsule.js; verborgen boven 700px) -->
   <div id="lade-waas" class="lade-waas" aria-hidden="true"></div>
   <div id="bevestigingen" class="bevestigingen" aria-live="polite"></div>
-  <button type="button" id="capsule" class="capsule" aria-controls="bon-lade" aria-expanded="false">
-    <span id="cap-n" class="cap-n">0</span>
-    <span class="cap-mid">
-      <span id="cap-laatste" class="cap-laatste">Nog niets op de bon</span>
-      <span id="cap-totaal" class="cap-totaal">€0,00</span>
-    </span>
-    <span class="cap-bon">Bon</span>
-  </button>
+  <div id="capsule-balk" class="capsule-balk">
+    <button type="button" id="cap-ongedaan" class="cap-ongedaan" hidden>
+      <span class="cap-ongedaan-pijl" aria-hidden="true">&#8630;</span>
+      <span class="cap-ongedaan-tekst">laatste ongedaan</span>
+    </button>
+    <button type="button" id="capsule" class="capsule" aria-controls="bon-lade" aria-expanded="false">
+      <span id="cap-n" class="cap-n">0</span>
+      <span class="cap-mid">
+        <span id="cap-laatste" class="cap-laatste">Nog niets op de bon</span>
+        <span id="cap-totaal" class="cap-totaal">€0,00</span>
+      </span>
+      <span class="cap-bon">Bon</span>
+    </button>
+  </div>
 
   <!-- Swipedrinks betaalscherm (popup) -->
   <div id="sd-overlay" class="sd-overlay verborgen">

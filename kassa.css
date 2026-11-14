@@ -341,19 +341,75 @@ input:focus-visible {
   padding: 16px 0;
 }
 
+/* Bonregel: naam bovenaan, daaronder − + | prijs | × (knoppen ≥ 44px) */
 #bon-lijst li {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  padding: 10px 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "naam naam naam"
+    "stap prijs weg";
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--ivoor2);
   font-size: 16px;
 }
 
-#bon-lijst li span:last-child {
-  flex: none;
+#bon-lijst .regel-naam {
+  grid-area: naam;
+  overflow-wrap: anywhere;
+}
+
+#bon-lijst .regel-prijs {
+  grid-area: prijs;
+  justify-self: end;
   font-variant-numeric: oldstyle-nums tabular-nums;
+}
+
+.regel-stap {
+  grid-area: stap;
+  display: flex;
+  gap: 6px;
+}
+
+.regel-knop {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--lijn);
+  font-family: var(--sans);
+  font-size: 22px;
+  line-height: 1;
+  touch-action: manipulation;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.regel-knop:hover {
+  border-color: var(--ink);
+}
+
+.regel-knop:active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.regel-knop:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.regel-weg {
+  grid-area: weg;
+  background: none;
+  border-color: transparent;
+  color: var(--grijs);
+  font-size: 26px;
+}
+
+.regel-weg:hover {
+  color: var(--ink);
 }
 
 .totaal {
@@ -463,6 +519,7 @@ input:focus-visible {
 }
 
 .wis-knop {
+  min-height: 44px;
   padding: 8px;
   background: none;
   color: var(--grijs);
@@ -950,6 +1007,7 @@ input:focus-visible {
 
 /* --- Gsm: zwevende capsule, bevestigingen en de bon als lade (capsule.js) ---
    Boven 700px bestaan deze elementen niet zichtbaar; de indeling blijft zoals hierboven. */
+.capsule-balk,
 .capsule,
 .lade-waas,
 .bevestigingen,
@@ -1026,6 +1084,8 @@ input:focus-visible {
     flex: 1 1 auto;
     min-height: 80px;
     max-height: none;
+    /* Eigen scroll-container: zonder dit telt een horizontale veeg als "terug" in de browser */
+    touch-action: pan-y;
   }
 
   .lade-kop {
@@ -1074,13 +1134,62 @@ input:focus-visible {
     pointer-events: auto;
   }
 
-  /* Capsule: inktzwart, dubbele ivoren rand, onderaan zwevend */
-  .capsule {
+  /* Balk onderaan: (↶ laatste ongedaan) + capsule */
+  .capsule-balk {
     position: fixed;
     z-index: 30;
     left: 12px;
     right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .cap-ongedaan {
+    flex: none;
+    width: 78px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    padding: 6px 4px;
+    background: var(--ivoor);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 30px;
+    box-shadow: 0 0 0 2px var(--ivoor), 0 0 0 3px var(--ink), 0 18px 30px -12px rgba(0, 0, 0, 0.45);
+    font-family: var(--sans);
+    touch-action: manipulation;
+  }
+
+  .cap-ongedaan[hidden] {
+    display: none;
+  }
+
+  .cap-ongedaan:active {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .cap-ongedaan-pijl {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .cap-ongedaan-tekst {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  /* Capsule: inktzwart, dubbele ivoren rand, onderaan zwevend (in .capsule-balk) */
+  .capsule {
+    flex: 1 1 auto;
+    min-width: 0;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
@@ -1167,6 +1276,11 @@ input:focus-visible {
     pointer-events: none;
   }
 
+  /* De kaartjes zelf zijn wel tikbaar (knop "Ongedaan") */
+  .bev {
+    pointer-events: auto;
+  }
+
   .bev {
     display: flex;
     align-items: baseline;
@@ -1204,6 +1318,32 @@ input:focus-visible {
   .bev-prijs {
     color: var(--grijs);
     font-variant-numeric: tabular-nums;
+  }
+
+  .bev-ongedaan {
+    align-self: center;
+    min-height: 44px;
+    margin: -8px -10px -8px 2px;
+    padding: 0 14px;
+    background: var(--ink);
+    color: #fff;
+    border: 0;
+    border-radius: 18px;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    touch-action: manipulation;
+  }
+
+  .bev-ongedaan:active {
+    background: #3a3833;
+  }
+
+  /* Bon leegmaken: groter tikvlak in de lade */
+  .wis-knop {
+    min-height: 48px;
+    font-size: 12px;
   }
 
   .bev.weg {

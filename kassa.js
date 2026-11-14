@@ -4,7 +4,11 @@ let bon = [];
 // Geladen open rekening: { id, naam } of null
 let rekening = null;
 
-// Voeg een item toe aan de bon
+// Ongedaan-stapel: één eenheid per geslaagde voegToe, { id, naam }
+let ongedaanStapel = [];
+let ongedaanTeller = 0;
+
+// Voeg een item toe aan de bon; geeft het id van de toevoeging terug (voor "Ongedaan")
 function voegToe(naam, prijs) {
   // Kijk of het item al op de bon staat
   let bestaand = bon.find(item => item.naam === naam);
@@ -13,7 +17,77 @@ function voegToe(naam, prijs) {
   } else {
     bon.push({ naam: naam, prijs: prijs, aantal: 1 });
   }
+  const id = ++ongedaanTeller;
+  ongedaanStapel.push({ id: id, naam: naam });
   tekenBon();
+  return id;
+}
+
+// Aantal van regel `index` aanpassen (−1 / +1); bij 0 verdwijnt de regel
+function veranderAantal(index, delta) {
+  const item = bon[index];
+  if (!item) return;
+  item.aantal += delta;
+  if (item.aantal <= 0) bon.splice(index, 1);
+  tekenBon();
+}
+
+// Hele regel `index` van de bon halen
+function verwijderRegel(index) {
+  if (!bon[index]) return;
+  bon.splice(index, 1);
+  tekenBon();
+}
+
+function heeftOngedaan() {
+  return ongedaanStapel.length > 0;
+}
+
+// Maak een toevoeging ongedaan: een bepaalde (id) of anders de laatste.
+// Haalt één eenheid weg van dezelfde regel die voegToe verhoogde (eerste regel met die naam).
+function laatsteOngedaan(id) {
+  const pos = id == null ? ongedaanStapel.length - 1 : ongedaanStapel.findIndex(a => a.id === id);
+  if (pos < 0) return false;
+  const actie = ongedaanStapel.splice(pos, 1)[0];
+  const index = bon.findIndex(item => item.naam === actie.naam);
+  if (index < 0) { tekenBon(); return false; }
+  veranderAantal(index, -1);
+  return true;
+}
+
+// Stapel in lijn houden met de bon: leeg bij een lege bon, en nooit meer
+// toevoegingen per naam dan er nog eenheden op die regel staan (oudste vallen eerst weg).
+function snoeiOngedaan() {
+  if (bon.length === 0) { ongedaanStapel = []; return; }
+  const over = {};
+  for (let i = ongedaanStapel.length - 1; i >= 0; i--) {
+    const naam = ongedaanStapel[i].naam;
+    if (!(naam in over)) {
+      const regel = bon.find(item => item.naam === naam);
+      over[naam] = regel ? regel.aantal : 0;
+    }
+    if (over[naam] > 0) over[naam]--;
+    else ongedaanStapel.splice(i, 1);
+  }
+}
+
+// Kleine knop voor een bonregel
+function regelKnop(tekst, label, klasse, actie) {
+  const knop = document.createElement('button');
+  knop.type = 'button';
+  knop.className = 'regel-knop ' + klasse;
+  knop.textContent = tekst;
+  // (guard en onclick: de nep-DOM in tests/*.cjs kent geen setAttribute/addEventListener)
+  if (typeof knop.setAttribute === 'function') knop.setAttribute('aria-label', label);
+  knop.onclick = actie;
+  return knop;
+}
+
+// Na het hertekenen de focus terugzetten op dezelfde knop (toetsenbord)
+function herstelFocus(index, klasse) {
+  const li = document.getElementById('bon-lijst').children[index];
+  const knop = li && li.querySelector('.' + klasse);
+  if (knop) knop.focus({ preventScroll: true });
 }
 
 // Teken de bon opnieuw op het scherm
@@ -21,13 +95,35 @@ function tekenBon() {
   let lijst = document.getElementById('bon-lijst');
   lijst.innerHTML = '';
 
-  bon.forEach(item => {
+  snoeiOngedaan();
+
+  bon.forEach((item, index) => {
     let li = document.createElement('li');
     let naam = document.createElement('span');
+    naam.className = 'regel-naam';
     naam.textContent = item.aantal + 'x ' + item.naam;
     let prijs = document.createElement('span');
+    prijs.className = 'regel-prijs';
     prijs.textContent = euro(Math.round(item.prijs * 100) * item.aantal);
-    li.append(naam, prijs);
+
+    let stap = document.createElement('span');
+    stap.className = 'regel-stap';
+    stap.append(
+      regelKnop('\u2212', item.naam + ' verminderen', 'regel-min', () => {
+        veranderAantal(index, -1);
+        herstelFocus(index, 'regel-min');
+      }),
+      regelKnop('+', item.naam + ' verhogen', 'regel-plus', () => {
+        veranderAantal(index, 1);
+        herstelFocus(index, 'regel-plus');
+      })
+    );
+    let weg = regelKnop('\u00d7', item.naam + ' verwijderen', 'regel-weg', () => {
+      verwijderRegel(index);
+      herstelFocus(Math.min(index, bon.length - 1), 'regel-weg');
+    });
+
+    li.append(naam, stap, prijs, weg);
     lijst.appendChild(li);
   });
 
@@ -66,7 +162,22 @@ function afrekenen() {
 function wisAlles() {
   bon = [];
   rekening = null;
+  ongedaanStapel = [];
   tekenBon();
+}
+
+// Knop "Bon leegmaken": eerst bevestigen, dan wisAlles() (die zelf niets vraagt)
+function bonLeegmaken() {
+  if (bon.length === 0 && !rekening) return;
+  if (bon.length) {
+    let vraag = 'Alle items van de bon verwijderen?';
+    if (rekening) {
+      vraag += '\n\nDe open rekening van ' + rekening.naam + ' blijft in de database staan; ' +
+        'ze wordt enkel van de kassa gehaald.';
+    }
+    if (!confirm(vraag)) return;
+  }
+  wisAlles();
 }
 
 // Toon een categorie en verberg de andere

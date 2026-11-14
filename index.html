@@ -41,6 +41,7 @@
       <div class="totaal">Totaal: <span id="totaal">€0,00</span></div>
       <button class="afrekenen-knop" onclick="afrekenen()">Afrekenen</button>
       <button class="sd-knop" onclick="openSwipedrinks()">Swipedrinks</button>
+      <button class="rek-knop" onclick="if (window.openBonScan) openBonScan(); else alert('De bonscanner kon niet geladen worden. Herlaad de pagina.')">Scan bon</button>
       <div class="bon-rij">
         <button id="rek-knop" class="rek-knop" onclick="rekeningKnop()">Rekening</button>
         <button class="rek-knop" onclick="toonOpenRekeningen()">Openstaande rekeningen</button>
@@ -186,6 +187,50 @@
     </div>
   </div>
 
+  <!-- Bonscanner: papieren bestelbon scannen (popup) -->
+  <div id="bs-overlay" class="sd-overlay verborgen">
+    <div class="sd-scherm bs-scherm">
+
+      <!-- Stap 1: camera -->
+      <div id="bs-scan" class="bet-stap">
+        <h2>Scan bon</h2>
+        <video id="bs-video" class="bs-video" playsinline muted></video>
+        <p id="bs-status" class="sd-wacht"></p>
+        <div id="bs-zones" class="bs-zones verborgen">
+          <div id="bs-zone-TL" class="bs-zone"><span>Linksboven</span><small>nog niet</small></div>
+          <div id="bs-zone-TR" class="bs-zone"><span>Rechtsboven</span><small>nog niet</small></div>
+          <div id="bs-zone-BL" class="bs-zone"><span>Linksonder</span><small>nog niet</small></div>
+          <div id="bs-zone-BR" class="bs-zone"><span>Rechtsonder</span><small>nog niet</small></div>
+        </div>
+        <p id="bs-fout" class="bs-fout verborgen"></p>
+        <button id="bs-play" class="afrekenen-knop verborgen">Tik om camera te starten</button>
+        <div id="bs-herstel" class="bon-rij verborgen">
+          <button id="bs-zelfde" class="rek-knop">Zelfde bon verder</button>
+          <button id="bs-nieuw" class="rek-knop">Nieuwe bon</button>
+        </div>
+        <button id="bs-manueel" class="sd-opnieuw verborgen">De rest manueel</button>
+        <button id="bs-opnieuw" class="sd-opnieuw verborgen">Opnieuw proberen</button>
+        <a class="bs-link" href="bonscanner/Swipedrinks-vierzonebon-A4.pdf" target="_blank" rel="noopener">Lege bon afdrukken</a>
+        <button id="bs-annuleer" class="sd-annuleer">Annuleer</button>
+      </div>
+
+      <!-- Stap 2: controle -->
+      <div id="bs-controle" class="bet-stap verborgen">
+        <h2>Controleer de bon</h2>
+        <p id="bs-controle-info" class="sd-totaal-label"></p>
+        <ul id="bs-regels" class="bs-regels"></ul>
+        <button id="bs-alle-geen" class="sd-opnieuw verborgen">Alle ongelezen = geen</button>
+        <p id="bs-totaal" class="sd-totaal-label"></p>
+        <button id="bs-zet" class="afrekenen-knop" disabled>Op de bon zetten</button>
+        <div class="bon-rij">
+          <button id="bs-scan-opnieuw" class="rek-knop">Scan opnieuw</button>
+          <button id="bs-sluit" class="rek-knop">Annuleer</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -193,5 +238,12 @@
   <script src="kassa.js"></script>
   <script src="swipedrinks.js"></script>
   <script src="betalen.js"></script>
+  <!-- Bonscanner (mag falen zonder de kassa te breken) -->
+  <script src="bonscanner/form.js"></script>
+  <script src="bonscanner/large-form.js"></script>
+  <script src="bonscanner/zone-form.js"></script>
+  <script src="bonscanner/scanner.js"></script>
+  <script src="bonscanner/live.js"></script>
+  <script src="bonscan.js"></script>
 </body>
 </html>

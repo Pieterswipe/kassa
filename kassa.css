@@ -251,6 +251,144 @@ body {
   overflow-y: auto;
 }
 
+/* --- Bonscanner --- */
+.bs-scherm {
+  width: 540px;
+  max-width: 96vw;
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.bs-video {
+  width: 100%;
+  max-height: 45vh;
+  background: #000;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.bs-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bs-zone {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-radius: 8px;
+  background: #0f3460;
+  font-size: 0.9rem;
+}
+
+.bs-zone small { color: #aaa; }
+.bs-zone[data-stand="bezig"] { background: #7a5a00; }
+.bs-zone[data-stand="gelezen"] { background: #1a4a2e; }
+.bs-zone[data-stand="gelezen"] small { color: #4cff82; }
+
+.bs-fout { color: #ff4c4c; }
+
+.bs-link {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.bs-regels {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.bs-regel {
+  background: #0f3460;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bs-regel.bs-onzeker { outline: 2px solid #c17800; }
+.bs-regel.bs-nul { opacity: 0.55; }
+
+.bs-regel-kop {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: bold;
+}
+
+.bs-prijs { color: #aaa; font-weight: normal; }
+.bs-niet-in-kassa { color: #ffb84c; font-weight: bold; }
+.bs-reden { color: #ffb84c; }
+
+.bs-crop {
+  max-width: 100%;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.bs-keuzes {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(6, 1fr);
+  gap: 4px;
+}
+
+.bs-keuze, .bs-stap {
+  padding: 10px 0;
+  background: #1a3a6e;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.bs-keuze.bs-hint { border: 2px solid #ffb84c; }
+.bs-keuze:hover, .bs-stap:hover:not(:disabled) { background: #e94560; }
+.bs-stap { width: 44px; }
+.bs-stap:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.bs-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bs-aantal {
+  min-width: 2em;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.bs-prijsveld {
+  display: flex;
+  gap: 8px;
+}
+
+.bs-prijs-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+.bs-prijs-input.bs-ongeldig { border-color: #ff4c4c; }
+.bs-overslaan { flex: 0 0 auto; padding: 10px 12px; }
+.bs-overslaan.bs-aan { background: #e94560; }
+
+.bs-leeg { color: #aaa; text-align: center; }
+
+#bs-zet:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .rek-lijst .rek-knop {
   display: flex;
   justify-content: space-between;

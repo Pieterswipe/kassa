@@ -4,3 +4,5 @@
 [build]
   command = "cp ../producten.js ../bestelcode.js ./"
   publish = "."
+  # Ook opnieuw bouwen als de gedeelde productlijst of bestelcode in de root wijzigt
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../producten.js ../bestelcode.js"

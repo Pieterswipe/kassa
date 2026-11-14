@@ -157,3 +157,32 @@
   border-radius: 10px;
   overflow: hidden;
 }
+
+.sd-flow-knop:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sd-flow-knop:disabled:hover {
+  background: #0f3460;
+}
+
+#sd-keuze-status.sd-fout {
+  color: #ff4c4c;
+  animation: none;
+}
+
+.sd-opnieuw {
+  padding: 10px 16px;
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sd-opnieuw:hover {
+  background: #e94560;
+}

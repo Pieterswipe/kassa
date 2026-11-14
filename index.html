@@ -53,10 +53,12 @@
       <div id="sd-keuze">
         <h2>Swipedrinks</h2>
         <p class="sd-totaal-label">Totaal: <strong id="sd-totaal-tokens"></strong> tokens</p>
+        <p id="sd-keuze-status" class="sd-wacht verborgen"></p>
         <div class="sd-keuze-knoppen">
-          <button class="sd-flow-knop" onclick="flowA()">Toon QR<br><small>Klant scant met app</small></button>
-          <button class="sd-flow-knop" onclick="flowB()">Scan kaart<br><small>Bartender scant klant</small></button>
+          <button id="sd-btn-flow-a" class="sd-flow-knop" onclick="flowA()" disabled>Toon QR<br><small>Klant scant met app</small></button>
+          <button id="sd-btn-flow-b" class="sd-flow-knop" onclick="flowB()" disabled>Scan kaart<br><small>Bartender scant klant</small></button>
         </div>
+        <button id="sd-btn-retry" class="sd-opnieuw verborgen" onclick="opnieuwQRAanmaken()">Opnieuw proberen</button>
         <button class="sd-annuleer" onclick="sluitSwipedrinks()">Annuleer</button>
       </div>
 
@@ -95,7 +97,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="kassa.js"></script>
   <script src="swipedrinks.js"></script>
 </body>

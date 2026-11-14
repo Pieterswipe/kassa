@@ -48,16 +48,37 @@ test('alle 50 bonartikelen aanwezig met hun bon-id', () => {
     [['X01', 'Leffe Blond'], ['X02', 'Stella Artois']]);
 });
 
-test('elk product heeft een bestaande categorie en geldige prijs', () => {
+// Test-kopie waarin enkele artikelen (zoals vroeger) geen prijs hebben, om de terugval te testen.
+const zonderPrijs = (lijst, namen) => lijst.map(p => (namen.includes(p.naam) ? Object.assign({}, p, { prijs: null }) : p));
+const testProducten = zonderPrijs(producten, ['Koffie', 'Kipcorn']);
+
+test('elk product heeft een bestaande categorie en een prijs > 0 (afgerond op 0,10)', () => {
   const cats = categorieen.map(c => c.id);
   for (const p of producten) {
     assert.ok(cats.includes(p.categorie), p.naam);
-    assert.ok(p.prijs === null || (typeof p.prijs === 'number' && p.prijs > 0), p.naam);
+    assert.ok(typeof p.prijs === 'number' && p.prijs > 0, p.naam + ' heeft geen prijs');
+    assert.equal(Math.round(p.prijs * 100) % 10, 0, p.naam + ' niet afgerond op 0,10');
   }
-  // Precies de vaste prijzen die vroeger in index.html stonden; de rest is prijs: null
-  const vast = Object.fromEntries(producten.filter(p => p.prijs != null).map(p => [p.naam, p.prijs]));
-  assert.deepEqual(vast, { Cola: 2, Water: 1.5, Fanta: 2, Sprite: 2, Tonic: 3.2, Appelsap: 3.2, Sinaasappelsap: 3.2,
-    Jupiler: 2.5, Duvel: 3.5, 'Leffe Blond': 3, 'Stella Artois': 2.5, 'Jupiler 0.0': 2.8, Loempia: 2.8 });
+  // Redelijke grenzen per categorie (sportclubkantine)
+  const grens = { fris: [1.5, 3.2], bier: [2.5, 4], warm: [1.8, 2.8], snack: [2.5, 4], brood: [3, 5], zoet: [1, 2.5] };
+  for (const p of producten) {
+    const [min, max] = grens[p.categorie];
+    assert.ok(p.prijs >= min && p.prijs <= max, p.naam + ' ' + p.prijs);
+  }
+});
+
+test('de bestaande vaste prijzen bleven ongewijzigd', () => {
+  const prijs = n => producten.find(p => p.naam === n).prijs;
+  const oud = { Cola: 2, Water: 1.5, Fanta: 2, Sprite: 2, Tonic: 3.2, Appelsap: 3.2, Sinaasappelsap: 3.2,
+    Jupiler: 2.5, Duvel: 3.5, 'Leffe Blond': 3, 'Stella Artois': 2.5, 'Jupiler 0.0': 2.8, Loempia: 2.8 };
+  for (const [naam, p] of Object.entries(oud)) assert.equal(prijs(naam), p, naam);
+  // logische verhoudingen
+  assert.equal(prijs('Cola Zero'), prijs('Cola'));
+  assert.equal(prijs('Spuitwater'), prijs('Water'));
+  assert.ok(prijs('Friet klein') < prijs('Friet groot'));
+  assert.ok(prijs('Koffie') < prijs('Cappuccino') && prijs('Thee') < prijs('Warme chocomelk'));
+  assert.ok(prijs('Broodje kaas') < prijs('Broodje hesp-kaas') && prijs('Broodje hesp') < prijs('Broodje gezond'));
+  assert.ok(prijs('Suikerwafel') <= prijs('Chips zout'));
 });
 
 // --- bestelcode.js ---
@@ -139,7 +160,7 @@ test('kiosk en kassa laden dezelfde bestanden', () => {
 
 test('bestelling -> controleregels: kassa, prijs nodig, onbekend', () => {
   const items = bc.decodeBestelling('KB1:01*2,31*1,X01*3,77*4');
-  const regels = bs.regelsUitBestelling(items, producten, {});
+  const regels = bs.regelsUitBestelling(items, testProducten, {}); // Kipcorn hier zonder prijs
   assert.deepEqual(regels.map(r => [r.koppeling.naam, r.koppeling.soort, r.koppeling.cent, r.aantal, r.onzeker]), [
     ['Cola', 'kassa', 200, 2, false],
     ['Kipcorn', 'prijs-nodig', null, 1, false],
@@ -173,9 +194,12 @@ test('onbekend artikel met prijs: op de bon, maar prijs niet onthouden', () => {
 
 test('onthouden prijs geldt ook voor de bestelling; ongeldige aantallen vallen weg', () => {
   const regels = bs.regelsUitBestelling([{ id: '20', aantal: 2 }, { id: '01', aantal: 0 }, { id: '02', aantal: 'x' }],
-    producten, { koffie: 180 });
+    testProducten, { koffie: 190 });
   assert.equal(regels.length, 1);
-  assert.deepEqual(regels[0].koppeling, { soort: 'kassa', naam: 'Koffie', cent: 180 });
+  assert.deepEqual(regels[0].koppeling, { soort: 'kassa', naam: 'Koffie', cent: 190 });
+  // met de echte lijst wint de vaste prijs
+  assert.deepEqual(bs.regelsUitBestelling([{ id: '20', aantal: 2 }], producten, { koffie: 190 })[0].koppeling,
+    { soort: 'kassa', naam: 'Koffie', cent: 180 });
   assert.equal(bs.verzamel(regels).klaar, true);
   assert.deepEqual(bs.regelsUitBestelling([], producten, {}), []);
   assert.equal(bs.verzamel([]).klaar, false);
@@ -207,10 +231,11 @@ function alle(e) {
   return (e.children || []).filter(c => typeof c !== 'string').flatMap(c => [c, ...alle(c)]);
 }
 
-test('kassa.js bouwt tabs en knoppen uit producten.js', () => {
+// Laadt producten.js, prijzen.js en kassa.js in een nep-browser.
+// zonder: namen die (voor de test) geen prijs krijgen, zoals vroeger.
+function laadKassa(opslag, zonder) {
   const vasteEls = { tabs: nepElement('div'), 'knoppen-vak': nepElement('div'), 'bon-lijst': nepElement('ul'),
     totaal: nepElement('span'), 'rekening-label': nepElement('div'), 'rek-knop': nepElement('button') };
-  const opslag = { 'kassa.bonscan.prijzen': JSON.stringify({ koffie: 180 }) };
   const ctx = {
     console, Intl, JSON,
     localStorage: { getItem: k => (k in opslag ? opslag[k] : null), setItem: (k, w) => { opslag[k] = String(w); } },
@@ -231,35 +256,102 @@ test('kassa.js bouwt tabs en knoppen uit producten.js', () => {
   };
   ctx.window = ctx;
   vm.createContext(ctx);
-  for (const f of ['producten.js', 'prijzen.js', 'kassa.js']) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx);
-
-  const tabs = vasteEls.tabs.children;
-  assert.deepEqual(tabs.map(t => t.textContent), categorieen.map(c => c.titel));
-  assert.ok(tabs[0].classList.contains('actief'));
+  vm.runInContext(fs.readFileSync(path.join(root, 'producten.js'), 'utf8'), ctx);
+  ctx.zonder = zonder || [];
+  vm.runInContext('KASSA_PRODUCTEN.forEach(p => { if (zonder.includes(p.naam)) p.prijs = null; })', ctx);
+  for (const f of ['prijzen.js', 'kassa.js']) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx);
   const cats = vasteEls['knoppen-vak'].children;
-  assert.deepEqual(cats.map(c => c.id), categorieen.map(c => c.id));
-  assert.deepEqual(cats.map(c => c.classList.contains('verborgen')), [false, true, true, true, true, true]);
-  const knoppen = cats.flatMap(c => c.children);
-  assert.deepEqual(knoppen.map(k => k.dataset.naam), producten.map(p => p.naam));
+  return {
+    ctx, tabs: vasteEls.tabs.children, cats, knoppen: cats.flatMap(c => c.children),
+    knop: naam => cats.flatMap(c => c.children).find(k => k.dataset.naam === naam),
+    bon: () => JSON.parse(JSON.stringify(vm.runInContext('bon', ctx))),
+    geleerd: () => JSON.parse(opslag['kassa.bonscan.prijzen'] || '{}')
+  };
+}
 
-  const cola = knoppen.find(k => k.dataset.naam === 'Cola');
-  assert.equal(cola.textContent, 'Cola€2,00');
-  assert.equal(cola.classList.contains('zonder-prijs'), false);
-  const kipcorn = knoppen.find(k => k.dataset.naam === 'Kipcorn');
-  assert.equal(kipcorn.textContent, 'Kipcornprijs?');
-  assert.ok(kipcorn.classList.contains('zonder-prijs'));
-  const koffie = knoppen.find(k => k.dataset.naam === 'Koffie'); // onthouden prijs
-  assert.equal(koffie.textContent, 'Koffie€1,80');
-  assert.equal(koffie.classList.contains('zonder-prijs'), false);
+test('kassa.js bouwt tabs en knoppen uit producten.js, elke knop met prijs', () => {
+  const opslag = { 'kassa.bonscan.prijzen': JSON.stringify({ koffie: 190, cola: 999, 'gin-tonic': 900 }) };
+  const k = laadKassa(opslag);
 
-  cola.click(); cola.click(); koffie.click();
-  assert.deepEqual(JSON.parse(JSON.stringify(vm.runInContext('bon', ctx))),
-    [{ naam: 'Cola', prijs: 2, aantal: 2 }, { naam: 'Koffie', prijs: 1.8, aantal: 1 }]);
+  assert.deepEqual(k.tabs.map(t => t.textContent), categorieen.map(c => c.titel));
+  assert.ok(k.tabs[0].classList.contains('actief'));
+  assert.deepEqual(k.cats.map(c => c.id), categorieen.map(c => c.id));
+  assert.deepEqual(k.cats.map(c => c.classList.contains('verborgen')), [false, true, true, true, true, true]);
+  assert.deepEqual(k.knoppen.map(x => x.dataset.naam), producten.map(p => p.naam));
 
-  tabs[1].click();                                    // tab Bieren
-  assert.ok(tabs[1].classList.contains('actief') && !tabs[0].classList.contains('actief'));
-  assert.equal(cats[1].classList.contains('verborgen'), false);
-  assert.equal(cats[0].classList.contains('verborgen'), true);
+  // Overal een prijs: geen "prijs?", geen zonder-prijs, geen prijsvraag
+  for (const p of producten) {
+    const knop = k.knop(p.naam);
+    assert.equal(knop.textContent, p.naam + '€' + p.prijs.toFixed(2).replace('.', ','), p.naam);
+    assert.equal(knop.classList.contains('zonder-prijs'), false, p.naam);
+    assert.equal(knop.dataset.vraagPrijs, undefined, p.naam);
+  }
+  // Vaste prijs wint: onthouden Koffie (1,90) en Cola (9,99) worden niet gebruikt en opgeruimd
+  assert.equal(k.knop('Koffie').textContent, 'Koffie€1,80');
+  assert.deepEqual(k.geleerd(), { 'gin-tonic': 900 });
+
+  k.knop('Cola').click(); k.knop('Cola').click(); k.knop('Koffie').click();
+  assert.deepEqual(k.bon(), [{ naam: 'Cola', prijs: 2, aantal: 2 }, { naam: 'Koffie', prijs: 1.8, aantal: 1 }]);
+
+  k.tabs[1].click();                                    // tab Bieren
+  assert.ok(k.tabs[1].classList.contains('actief') && !k.tabs[0].classList.contains('actief'));
+  assert.equal(k.cats[1].classList.contains('verborgen'), false);
+  assert.equal(k.cats[0].classList.contains('verborgen'), true);
+});
+
+test('kassa.js terugval voor een artikel zonder prijs blijft werken', () => {
+  const opslag = { 'kassa.bonscan.prijzen': JSON.stringify({ koffie: 190, cola: 999 }) };
+  const k = laadKassa(opslag, ['Koffie', 'Kipcorn']);   // in de test zonder vaste prijs
+  assert.equal(k.knop('Kipcorn').textContent, 'Kipcornprijs?');
+  assert.ok(k.knop('Kipcorn').classList.contains('zonder-prijs'));
+  assert.equal(k.knop('Koffie').textContent, 'Koffie€1,90');      // onthouden prijs blijft
+  assert.equal(k.knop('Koffie').classList.contains('zonder-prijs'), false);
+  assert.equal(k.knop('Cola').textContent, 'Cola€2,00');          // vaste prijs wint
+  assert.deepEqual(k.geleerd(), { koffie: 190 });                 // alleen cola opgeruimd
+  k.knop('Koffie').click();
+  assert.deepEqual(k.bon(), [{ naam: 'Koffie', prijs: 1.9, aantal: 1 }]);
+});
+
+// --- Kiosk (bestel/bestel.js, nep-DOM) ---
+
+function laadKiosk(zonder) {
+  const els = {};
+  const lijst = () => els.lijst || (els.lijst = nepElement('main'));
+  const ctx = {
+    console, JSON,
+    sessionStorage: { getItem: () => null, setItem() {} },
+    innerWidth: 400, innerHeight: 800, scrollTo() {},
+    document: {
+      getElementById: id => els[id] || alle(lijst()).find(x => x.id === id) || (els[id] = nepElement('div')),
+      createElement: tag => Object.assign(nepElement(tag), { setAttribute() {} }),
+      querySelector: () => nepElement('div')
+    }
+  };
+  ctx.window = ctx;
+  vm.createContext(ctx);
+  for (const f of ['producten.js', 'bestelcode.js']) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx);
+  ctx.zonder = zonder || [];
+  vm.runInContext('KASSA_PRODUCTEN.forEach(p => { if (zonder.includes(p.naam)) p.prijs = null; })', ctx);
+  vm.runInContext(fs.readFileSync(path.join(root, 'bestel', 'bestel.js'), 'utf8'), ctx);
+  const rijen = alle(lijst()).filter(x => x.className === 'rij');
+  const prijsVan = id => rijen.find(r => r.dataset.id === id).querySelector('.prijs');
+  return { rijen, prijsVan };
+}
+
+test('kiosk toont bij elk artikel een prijs', () => {
+  const kiosk = laadKiosk();
+  assert.deepEqual(kiosk.rijen.map(r => r.dataset.id), producten.map(p => p.id));
+  for (const p of producten) {
+    const el = kiosk.prijsVan(p.id);
+    assert.equal(el.textContent, '€' + p.prijs.toFixed(2).replace('.', ','), p.naam);
+    assert.equal(el.classList.contains('prijs-kassa'), false, p.naam);
+  }
+});
+
+test('kiosk terugval "prijs aan de kassa" blijft werken', () => {
+  const kiosk = laadKiosk(['Kipcorn']);
+  assert.equal(kiosk.prijsVan('K50-31').textContent, 'prijs aan de kassa');
+  assert.equal(kiosk.prijsVan('K50-01').textContent, '€2,00');
 });
 
 console.log(fouten ? fouten + ' test(s) mislukt' : 'Alle tests geslaagd');

@@ -153,5 +153,7 @@ function bouwProductKnoppen() {
     vak.appendChild(cat);
   });
 }
+// Vaste prijs uit producten.js wint: oude onthouden prijzen voor die artikelen weg.
+if (window.KassaPrijzen && window.KASSA_PRODUCTEN) window.KassaPrijzen.ruimOp(window.KASSA_PRODUCTEN);
 bouwProductKnoppen();
 toonOnthoudenPrijzen();

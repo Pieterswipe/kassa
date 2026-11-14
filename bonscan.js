@@ -3,12 +3,13 @@
 // Werking in het kort:
 // - De beeldherkenning zit in bonscanner/ (kopie van Pieterswipe/bon-scanner, volledig in de browser).
 // - "Scan bon" opent de camera (createLiveBonScanner). Na herkenning volgt een controlescherm.
-// - Bonartikelen worden op naam gekoppeld aan de kassaknoppen in index.html:
-//   voegToe('Naam', prijs) (vaste prijs) of voegToeVraagPrijs('Naam') (prijs wordt gevraagd).
-//   Alle 50 bonartikelen hebben een knop. Extra koppelingen: vul ALIASSEN hieronder aan.
+// - Bonartikelen worden op naam gekoppeld aan de kassaproducten uit producten.js
+//   (vaste prijs, of prijs null = prijs wordt gevraagd).
+//   Alle 50 bonartikelen zijn een kassaproduct. Extra koppelingen: vul ALIASSEN hieronder aan.
 //   Ontbreekt de prijs, dan vraagt het controlescherm ze ("Prijs nodig"); die prijs wordt
 //   onthouden in localStorage (prijzen.js) en geldt daarna ook voor de knop.
 // - "Op de bon zetten" telt alles bij de huidige `bon` op (zoals voegToe) en roept tekenBon() aan.
+// - Hetzelfde controlescherm dient ook voor "Scan bestelling" (bestelscan.js): window.toonBestelControle.
 //
 // De pure functies onderaan "Pure functies" worden getest met: node tests/bonscan.cjs
 (function () {
@@ -24,6 +25,9 @@
   function P() {
     return typeof module !== 'undefined' && module.exports ? require('./prijzen.js') : window.KassaPrijzen;
   }
+  function B() { // bestelcode.js
+    return typeof module !== 'undefined' && module.exports ? require('./bestelcode.js') : window.Bestelcode;
+  }
 
   // ---------------------------------------------------------------------------
   // Pure functies (geen DOM)
@@ -31,16 +35,6 @@
 
   const normNaam = naam => P().normNaam(naam);
   const prijsNaarCent = tekst => P().prijsNaarCent(tekst);
-
-  // Leest naam en prijs uit een onclick zoals "voegToe('Cola', 2.00)".
-  // "voegToeVraagPrijs('Kipcorn')" geeft prijs null. Geeft null als het niet lukt.
-  function leesKassaKnop(onclick) {
-    const tekst = String(onclick || '');
-    const m = /voegToe\(\s*(['"])(.*?)\1\s*,\s*(\d+(?:\.\d+)?)\s*\)/.exec(tekst);
-    if (m) return { naam: m[2], prijs: Number(m[3]) };
-    const v = /voegToeVraagPrijs\(\s*(['"])(.*?)\1\s*\)/.exec(tekst);
-    return v ? { naam: v[2], prijs: null } : null;
-  }
 
   // Zoekt het kassaproduct voor een bonnaam (eerst alias, dan rechtstreeks op naam).
   function zoekKassaProduct(bonNaam, producten, aliassen) {
@@ -96,6 +90,22 @@
     return uit;
   }
 
+  // Regels voor het controlescherm uit een gescande bestelling (bestelcode.js: [{ id, aantal }]).
+  // Onbekende id -> "Onbekend artikel (id)" met prijsveld/Overslaan; die prijs wordt niet onthouden.
+  function regelsUitBestelling(items, producten, geleerd) {
+    const uit = [];
+    (items || []).forEach((item, index) => {
+      const aantal = Number(item && item.aantal);
+      if (!Number.isInteger(aantal) || aantal < 1) return;
+      const p = B().zoekProduct(item.id, producten);
+      const koppeling = p ? koppel(p.naam, producten, geleerd, {})
+        : { soort: 'onbekend', naam: 'Onbekend artikel (' + item.id + ')', cent: null, nietOnthouden: true };
+      uit.push({ index, bonNaam: koppeling.naam, aantal, onzeker: false, ink: [], reden: '', manualReason: '',
+        crop: '', koppeling, invoer: { tekst: '', overslaan: false } });
+    });
+    return uit;
+  }
+
   // Onzekere rij zonder inkt die nooit gelezen werd (mag in één keer op "Geen").
   function isOngelezen(regel) {
     return regel.onzeker && regel.manualReason === 'unseen' && !regel.ink.length;
@@ -115,7 +125,8 @@
       if (cent == null) {
         cent = prijsNaarCent(invoer.tekst);
         if (cent == null) { zonderPrijs++; continue; }
-        nieuwePrijzen[normNaam(r.koppeling.naam)] = cent; // kassanaam: dan geldt de prijs ook voor de knop
+        // kassanaam: dan geldt de prijs ook voor de knop (niet voor onbekende bestel-ids)
+        if (!r.koppeling.nietOnthouden) nieuwePrijzen[normNaam(r.koppeling.naam)] = cent;
       }
       uit.push({ naam: r.koppeling.naam, prijs: cent / 100, aantal: r.aantal });
     }
@@ -132,8 +143,8 @@
     return lijst;
   }
 
-  const pure = { ALIASSEN, normNaam, leesKassaKnop, zoekKassaProduct, prijsNaarCent, koppel,
-    regelsUitResultaat, isOngelezen, verzamel, voegRegelsToe };
+  const pure = { ALIASSEN, normNaam, zoekKassaProduct, prijsNaarCent, koppel,
+    regelsUitResultaat, regelsUitBestelling, isOngelezen, verzamel, voegRegelsToe };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = pure;
@@ -151,15 +162,11 @@
   let live = null;      // createLiveBonScanner-instantie (lui aangemaakt)
   let kijken = false;   // camera loopt en wacht op een bon
   let regels = [];      // regels van het controlescherm
+  let bron = 'bon';     // 'bon' of 'bestelling': bepaalt wat "Scan opnieuw" doet
 
-  // Kassaproducten uit de knoppen in index.html (bij elke scan gelezen), zodat nieuwe knoppen vanzelf meetellen.
+  // Kassaproducten uit producten.js.
   function leesKassaProducten() {
-    const lijst = [];
-    document.querySelectorAll('[onclick*="voegToe"]').forEach(knop => {
-      const p = leesKassaKnop(knop.getAttribute('onclick'));
-      if (p && !lijst.some(x => x.naam === p.naam)) lijst.push(p);
-    });
-    return lijst;
+    return window.KASSA_PRODUCTEN || [];
   }
 
   function prijsTekst(cent) {
@@ -174,7 +181,7 @@
   function anderSchermOpen() {
     const open = id => { const e = $(id); return e && !e.classList.contains('verborgen'); };
     const sdCamera = typeof sdScanner !== 'undefined' && sdScanner; // swipedrinks.js
-    return open('sd-overlay') || open('bet-overlay') || !!sdCamera;
+    return open('sd-overlay') || open('bet-overlay') || open('kb-overlay') || !!sdCamera;
   }
 
   function maak(tag, klasse, tekst) {
@@ -202,6 +209,7 @@
       alert('Sluit eerst het Swipedrinks- of afrekenscherm.');
       return;
     }
+    bron = 'bon';
     $('bs-overlay').classList.remove('verborgen');
     startScan();
   }
@@ -316,11 +324,37 @@
       koppeling: koppel(r.bonNaam, kassaProducten, geleerd, ALIASSEN),
       invoer: { tekst: '', overslaan: false }
     }));
+    $('bs-controle-titel').textContent = 'Controleer de bon';
     $('bs-controle-info').textContent = result.partial === true
       ? 'Gedeeltelijk gescand. Kijk op de papieren bon en beslis de open vragen.'
       : 'Vergelijk met de papieren bon en pas aan waar nodig.';
     toonStap('bs-controle');
     tekenControle();
+  }
+
+  // Controlescherm voor een gescande bestelling (bestelscan.js). items: [{ id, aantal }]
+  function toonBestelControle(items, ongeldig) {
+    stopCamera();
+    bron = 'bestelling';
+    regels = regelsUitBestelling(items, leesKassaProducten(), P().leesGeleerd());
+    const onbekend = regels.filter(r => r.koppeling.nietOnthouden).length;
+    let info = 'Vergelijk met de klant en pas aan waar nodig.';
+    if (onbekend) info += ' ' + onbekend + (onbekend === 1 ? ' onbekend artikel' : ' onbekende artikelen') + ': prijs ingeven of overslaan.';
+    if (ongeldig) info += ' ' + ongeldig + (ongeldig === 1 ? ' onleesbare regel' : ' onleesbare regels') + ' genegeerd.';
+    $('bs-controle-titel').textContent = 'Controleer de bestelling';
+    $('bs-controle-info').textContent = info;
+    $('bs-overlay').classList.remove('verborgen');
+    toonStap('bs-controle');
+    tekenControle();
+  }
+
+  function scanOpnieuw() {
+    if (bron === 'bestelling' && typeof window.openBestelScan === 'function') {
+      sluitBonScan();
+      window.openBestelScan();
+    } else {
+      startScan();
+    }
   }
 
   function tekenControle() {
@@ -468,7 +502,7 @@
     $('bs-annuleer').addEventListener('click', sluitBonScan);
     $('bs-sluit').addEventListener('click', sluitBonScan);
     $('bs-opnieuw').addEventListener('click', startScan);
-    $('bs-scan-opnieuw').addEventListener('click', startScan);
+    $('bs-scan-opnieuw').addEventListener('click', scanOpnieuw);
     $('bs-play').addEventListener('click', () => {
       if (!kijken || !live) return;
       toon('bs-play', false);
@@ -487,4 +521,5 @@
 
   koppelKnoppen();
   window.openBonScan = openBonScan;
+  window.toonBestelControle = toonBestelControle;
 })();

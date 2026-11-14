@@ -1,0 +1,3 @@
+# Kopieën uit de root (zie netlify.toml), niet dubbel in git
+producten.js
+bestelcode.js

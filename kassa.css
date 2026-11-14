@@ -119,6 +119,26 @@ body {
   background: #0b7a70;
 }
 
+/* Scan bon en Scan bestelling naast elkaar */
+.bon-rij .scan-knop {
+  flex: 1;
+  padding: 14px 6px;
+}
+
+/* Scan bestelling (QR uit de klanten-bestelapp) */
+.bestel-scan-knop {
+  background: #2563eb;
+}
+
+.bestel-scan-knop:hover {
+  background: #1d4ed8;
+}
+
+#kb-camera {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
 /* --- Gsm: alles onder elkaar, volle breedte --- */
 @media (max-width: 700px) {
   body {

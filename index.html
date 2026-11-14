@@ -13,89 +13,11 @@
 
     <!-- Linkerkant: producten -->
     <div class="producten">
-      <!-- Tabs = de 6 categorieën van de papieren vierzonebon (bonscanner/large-form.js).
-           Knop met vaste prijs: voegToe('Naam', prijs). Knop zonder prijs: voegToeVraagPrijs('Naam')
-           vraagt één keer de prijs en onthoudt die (prijzen.js). De bonscanner leest deze knoppen. -->
-      <div class="tabs">
-        <button class="tab actief" onclick="toonCategorie('fris', this)">Frisdrank &amp; sap</button>
-        <button class="tab" onclick="toonCategorie('bier', this)">Bieren</button>
-        <button class="tab" onclick="toonCategorie('warm', this)">Warme dranken</button>
-        <button class="tab" onclick="toonCategorie('snack', this)">Warme snacks</button>
-        <button class="tab" onclick="toonCategorie('brood', this)">Broodjes</button>
-        <button class="tab" onclick="toonCategorie('zoet', this)">Zoet &amp; zout</button>
-      </div>
-
-      <div class="knoppen-vak">
-      <div id="fris" class="categorie">
-        <button class="item-knop" onclick="voegToe('Cola', 2.00)">Cola<br>€2,00</button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Cola Zero')">Cola Zero<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop" onclick="voegToe('Water', 1.50)">Water<br>€1,50</button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Spuitwater')">Spuitwater<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop" onclick="voegToe('Fanta', 2.00)">Fanta<br>€2,00</button>
-        <button class="item-knop" onclick="voegToe('Sprite', 2.00)">Sprite<br>€2,00</button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Ice Tea')">Ice Tea<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop" onclick="voegToe('Tonic', 3.20)">Tonic<br>€3,20</button>
-        <button class="item-knop" onclick="voegToe('Appelsap', 3.20)">Appelsap<br>€3,20</button>
-        <button class="item-knop" onclick="voegToe('Sinaasappelsap', 3.20)">Sinaasappelsap<br>€3,20</button>
-      </div>
-
-      <div id="bier" class="categorie verborgen">
-        <button class="item-knop" onclick="voegToe('Jupiler', 2.50)">Jupiler<br>€2,50</button>
-        <button class="item-knop" onclick="voegToe('Duvel', 3.50)">Duvel<br>€3,50</button>
-        <button class="item-knop" onclick="voegToe('Leffe Blond', 3.00)">Leffe Blond<br>€3,00</button>
-        <button class="item-knop" onclick="voegToe('Stella Artois', 2.50)">Stella Artois<br>€2,50</button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Ename')">Ename<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Tripel Karmeliet')">Tripel Karmeliet<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Westmalle Dubbel')">Westmalle Dubbel<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Kriek')">Kriek<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Hoegaarden')">Hoegaarden<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop" onclick="voegToe('Jupiler 0.0', 2.80)">Jupiler 0.0<br>€2,80</button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Sportzot 0.0')">Sportzot 0.0<br><span class="knop-prijs">prijs?</span></button>
-      </div>
-
-      <div id="warm" class="categorie verborgen">
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Koffie')">Koffie<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Deca')">Deca<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Espresso')">Espresso<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Cappuccino')">Cappuccino<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Thee')">Thee<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Warme chocomelk')">Warme chocomelk<br><span class="knop-prijs">prijs?</span></button>
-      </div>
-
-      <div id="snack" class="categorie verborgen">
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Friet klein')">Friet klein<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Friet groot')">Friet groot<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Frikandel')">Frikandel<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Boulet')">Boulet<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Mexicano')">Mexicano<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Kipcorn')">Kipcorn<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Bitterballen')">Bitterballen<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Kaaskroket')">Kaaskroket<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop" onclick="voegToe('Loempia', 2.80)">Loempia<br>€2,80</button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Kaasballetjes')">Kaasballetjes<br><span class="knop-prijs">prijs?</span></button>
-      </div>
-
-      <div id="brood" class="categorie verborgen">
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Broodje kaas')">Broodje kaas<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Broodje hesp')">Broodje hesp<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Broodje hesp-kaas')">Broodje hesp-kaas<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Broodje gezond')">Broodje gezond<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Broodje kipcurry')">Broodje kipcurry<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Broodje préparé')">Broodje préparé<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Broodje tonijn')">Broodje tonijn<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Hotdog')">Hotdog<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Croque monsieur')">Croque monsieur<br><span class="knop-prijs">prijs?</span></button>
-      </div>
-
-      <div id="zoet" class="categorie verborgen">
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Chips zout')">Chips zout<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Chips paprika')">Chips paprika<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Pindanootjes')">Pindanootjes<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Suikerwafel')">Suikerwafel<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('Chocoladereep')">Chocoladereep<br><span class="knop-prijs">prijs?</span></button>
-        <button class="item-knop zonder-prijs" onclick="voegToeVraagPrijs('IJsje')">IJsje<br><span class="knop-prijs">prijs?</span></button>
-      </div>
-      </div>
+      <!-- Tabs en productknoppen worden opgebouwd uit producten.js (bouwProductKnoppen in kassa.js).
+           Knop met vaste prijs: voegToe(naam, prijs). Knop zonder prijs: voegToeVraagPrijs(naam)
+           vraagt één keer de prijs en onthoudt die (prijzen.js). -->
+      <div id="tabs" class="tabs"></div>
+      <div id="knoppen-vak" class="knoppen-vak"></div>
     </div>
 
     <!-- Rechterkant: bon -->
@@ -106,7 +28,10 @@
       <div class="totaal">Totaal: <span id="totaal">€0,00</span></div>
       <button class="afrekenen-knop" onclick="afrekenen()">Afrekenen</button>
       <button class="sd-knop" onclick="openSwipedrinks()">Swipedrinks</button>
-      <button class="scan-knop" onclick="if (window.openBonScan) openBonScan(); else alert('De bonscanner kon niet geladen worden. Herlaad de pagina.')">📷 Scan bon</button>
+      <div class="bon-rij">
+        <button class="scan-knop" onclick="if (window.openBonScan) openBonScan(); else alert('De bonscanner kon niet geladen worden. Herlaad de pagina.')">📷 Scan bon</button>
+        <button id="kb-knop" class="scan-knop bestel-scan-knop" onclick="if (window.openBestelScan) openBestelScan(); else alert('De bestelscanner kon niet geladen worden. Herlaad de pagina.')">📲 Scan bestelling</button>
+      </div>
       <div class="bon-rij">
         <button id="rek-knop" class="rek-knop" onclick="rekeningKnop()">Rekening</button>
         <button class="rek-knop" onclick="toonOpenRekeningen()">Openstaande rekeningen</button>
@@ -252,6 +177,19 @@
     </div>
   </div>
 
+  <!-- Scan bestelling: QR van de klanten-bestelapp (bestel/) lezen (popup).
+       Na een geldige code volgt het controlescherm van de bonscanner (bs-controle). -->
+  <div id="kb-overlay" class="sd-overlay verborgen">
+    <div class="sd-scherm">
+      <h2>Scan bestelling</h2>
+      <div id="kb-camera"></div>
+      <p id="kb-status" class="sd-wacht"></p>
+      <p id="kb-fout" class="bs-fout verborgen"></p>
+      <button id="kb-opnieuw" class="sd-opnieuw verborgen">Opnieuw proberen</button>
+      <button id="kb-annuleer" class="sd-annuleer">Annuleer</button>
+    </div>
+  </div>
+
   <!-- Bonscanner: papieren bestelbon scannen (popup) -->
   <div id="bs-overlay" class="sd-overlay verborgen">
     <div class="sd-scherm bs-scherm">
@@ -279,9 +217,9 @@
         <button id="bs-annuleer" class="sd-annuleer">Annuleer</button>
       </div>
 
-      <!-- Stap 2: controle -->
+      <!-- Stap 2: controle (ook gebruikt na "Scan bestelling") -->
       <div id="bs-controle" class="bet-stap verborgen">
-        <h2>Controleer de bon</h2>
+        <h2 id="bs-controle-titel">Controleer de bon</h2>
         <p id="bs-controle-info" class="sd-totaal-label"></p>
         <ul id="bs-regels" class="bs-regels"></ul>
         <button id="bs-alle-geen" class="sd-opnieuw verborgen">Alle ongelezen = geen</button>
@@ -300,6 +238,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="db.js"></script>
+  <script src="producten.js"></script>
   <script src="prijzen.js"></script>
   <script src="kassa.js"></script>
   <script src="swipedrinks.js"></script>
@@ -311,5 +250,8 @@
   <script src="bonscanner/scanner.js"></script>
   <script src="bonscanner/live.js"></script>
   <script src="bonscan.js"></script>
+  <!-- Scan bestelling (QR van de klanten-bestelapp) -->
+  <script src="bestelcode.js"></script>
+  <script src="bestelscan.js"></script>
 </body>
 </html>

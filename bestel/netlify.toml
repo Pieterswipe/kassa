@@ -1,0 +1,6 @@
+# Klanten-bestelapp: aparte Netlify-site met base directory "bestel".
+# producten.js en bestelcode.js staan in de root (één bron, gedeeld met de kassa)
+# en worden bij het bouwen naast index.html gekopieerd. Geen functions.
+[build]
+  command = "cp ../producten.js ../bestelcode.js ./"
+  publish = "."

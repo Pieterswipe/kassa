@@ -124,19 +124,20 @@ test('synthetische vierzonebon (zonder fixture)', () => {
 
 const bs = require(path.join(root, 'bonscan.js'));
 
-// Kassaproducten zoals ze in index.html staan
+// Kassaproducten: één bron, producten.js (index.html bouwt er de knoppen mee op)
+const { KASSA_PRODUCTEN: kassa, KASSA_CATEGORIEEN } = require(path.join(root, 'producten.js'));
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const kassa = [...html.matchAll(/onclick="([^"]*voegToe[^"]*)"/g)]
-  .map(m => bs.leesKassaKnop(m[1])).filter(Boolean);
 
-test('kassaproducten uit index.html', () => {
+test('kassaproducten uit producten.js', () => {
   assert.equal(kassa.length, 52); // 50 bonartikelen + Leffe Blond + Stella Artois
-  assert.deepEqual(kassa.find(p => p.naam === 'Cola'), { naam: 'Cola', prijs: 2 });
-  assert.deepEqual(kassa.find(p => p.naam === 'Leffe Blond'), { naam: 'Leffe Blond', prijs: 3 });
-  assert.deepEqual(kassa.find(p => p.naam === 'Kipcorn'), { naam: 'Kipcorn', prijs: null });
-  assert.equal(bs.leesKassaKnop("voegToe(\"Duvel\", 3.50)").prijs, 3.5);
-  assert.deepEqual(bs.leesKassaKnop("voegToeVraagPrijs('Boulet')"), { naam: 'Boulet', prijs: null });
-  assert.equal(bs.leesKassaKnop('openSwipedrinks()'), null);
+  const kort = n => { const p = kassa.find(x => x.naam === n); return { naam: p.naam, prijs: p.prijs }; };
+  assert.deepEqual(kort('Cola'), { naam: 'Cola', prijs: 2 });
+  assert.deepEqual(kort('Leffe Blond'), { naam: 'Leffe Blond', prijs: 3 });
+  assert.deepEqual(kort('Kipcorn'), { naam: 'Kipcorn', prijs: null });
+  // index.html heeft geen eigen productlijst meer, wel de lege vakken en producten.js
+  assert.equal(/onclick="voegToe/.test(html), false);
+  assert.ok(html.includes('id="tabs"') && html.includes('id="knoppen-vak"'));
+  assert.ok(html.indexOf('src="producten.js"') < html.indexOf('src="kassa.js"'));
 });
 
 test('geen dubbele knoppen en de 8 oude prijzen ongewijzigd', () => {
@@ -147,8 +148,8 @@ test('geen dubbele knoppen en de 8 oude prijzen ongewijzigd', () => {
     assert.equal(kassa.find(p => p.naam === naam).prijs, prijs, naam);
   }
   // Leffe Blond en Stella Artois staan bij Bieren
-  const bier = html.slice(html.indexOf('id="bier"'), html.indexOf('id="warm"'));
-  assert.ok(bier.includes("voegToe('Leffe Blond'") && bier.includes("voegToe('Stella Artois'"));
+  assert.equal(kassa.find(p => p.naam === 'Leffe Blond').categorie, 'bier');
+  assert.equal(kassa.find(p => p.naam === 'Stella Artois').categorie, 'bier');
 });
 
 test('alle 50 bonartikelen zijn een kassaknop (Z50 en K50)', () => {
@@ -163,17 +164,19 @@ test('alle 50 bonartikelen zijn een kassaknop (Z50 en K50)', () => {
 });
 
 test('elke bon-categorie is een tab met precies haar artikelen', () => {
-  const tabs = [...html.matchAll(/class="tab[^"]*" onclick="toonCategorie\('(\w+)', this\)">([^<]+)</g)];
   const F = global.LargeBonForm;
-  assert.deepEqual(tabs.map(t => t[2].replace('&amp;', '&')), F.groups.map(g => g.title));
-  tabs.forEach(([, id], i) => {
-    const begin = html.indexOf('id="' + id + '"');
-    const eind = i + 1 < tabs.length ? html.indexOf('id="' + tabs[i + 1][1] + '"') : html.length;
-    const inTab = [...html.slice(begin, eind).matchAll(/onclick="([^"]*voegToe[^"]*)"/g)]
-      .map(m => bs.leesKassaKnop(m[1]).naam).filter(n => n !== 'Leffe Blond' && n !== 'Stella Artois');
+  assert.deepEqual(KASSA_CATEGORIEEN.map(c => c.titel), F.groups.map(g => g.title));
+  KASSA_CATEGORIEEN.forEach(({ id }, i) => {
+    const inTab = kassa.filter(p => p.categorie === id).map(p => p.naam)
+      .filter(n => n !== 'Leffe Blond' && n !== 'Stella Artois');
     const g = F.groups[i];
     assert.deepEqual(inTab, F.products.slice(g.start, g.start + g.count), id);
   });
+});
+
+test('bon-ids in producten.js volgen bonscanner/large-form.js', () => {
+  const F = global.LargeBonForm;
+  F.ids.forEach((id, i) => assert.equal(kassa.find(p => p.id === id).naam, F.products[i], id));
 });
 
 test('naam-normalisatie', () => {
@@ -259,7 +262,7 @@ test('kassaknop zonder prijs vraagt de prijs één keer (kassa.js)', () => {
   const el = () => ({ innerHTML: '', textContent: '', appendChild() {}, append() {}, classList: { toggle() {} } });
   const knopPrijs = { textContent: 'prijs?' };
   const knop = {
-    getAttribute: () => "voegToeVraagPrijs('Kipcorn')",
+    dataset: { naam: 'Kipcorn', vraagPrijs: '1' },
     querySelector: () => knopPrijs,
     classList: { aan: true, toggle(k, aan) { this.aan = aan; } }
   };

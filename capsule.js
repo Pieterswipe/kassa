@@ -1,6 +1,8 @@
 // Gsm (≤700px): zwevende capsule onderaan, bevestigingskaartjes en de bon als lade van rechts.
 // - Tik op de capsule of veeg naar links  -> lade open (dezelfde .bon, niets gedupliceerd).
 // - Veeg naar rechts, tik op de waas, "Producten" of Escape -> lade dicht.
+// - In de open lade: veeg een bonregel naar links -> die regel verwijderen.
+// - "↶ laatste ongedaan" naast de capsule en "Ongedaan" op het kaartje -> toevoeging terugdraaien.
 // Haakt in op voegToe en tekenBon uit kassa.js; de betaal- en scanlogica blijft ongemoeid.
 // Boven 700px doet dit bestand niets zichtbaars (CSS verbergt capsule, waas en bevestigingen).
 (function () {
@@ -20,6 +22,8 @@
   const capN = document.getElementById('cap-n');
   const capLaatste = document.getElementById('cap-laatste');
   const capTotaal = document.getElementById('cap-totaal');
+  const ongedaanKnop = document.getElementById('cap-ongedaan');
+  const KAART_DUUR = 4500; // zo lang blijft een kaartje (met "Ongedaan") staan
   if (!lade || !capsule || !waas || typeof window.voegToe !== 'function' || typeof window.tekenBon !== 'function') return;
 
   // Naam van het laatst toegevoegde artikel (via voegToe)
@@ -56,11 +60,19 @@
     capTotaal.textContent = euro(bonTotaalCents());
     capsule.setAttribute('aria-label', 'Bon openen: ' + aantal + (aantal === 1 ? ' artikel' : ' artikelen') +
       ', totaal ' + capTotaal.textContent);
+    verversOngedaan();
+  }
+
+  // "↶ laatste ongedaan": enkel zichtbaar als er iets terug te draaien valt
+  function verversOngedaan() {
+    if (!ongedaanKnop) return;
+    const kan = typeof window.heeftOngedaan === 'function' && window.heeftOngedaan();
+    ongedaanKnop.hidden = !kan;
   }
   window.verversCapsule = verversCapsule;
 
   // --- Bevestigingskaartje boven de capsule ---
-  function toonBevestiging(item) {
+  function toonBevestiging(item, id) {
     if (!bevestigingen || !GSM.matches || isOpen()) return;
     const kaart = document.createElement('div');
     kaart.className = 'bev';
@@ -76,11 +88,23 @@
     prijs.className = 'bev-prijs';
     prijs.textContent = geld(item);
     kaart.append(plus, naam, n, prijs);
+    if (id != null && typeof window.laatsteOngedaan === 'function') {
+      const terug = document.createElement('button');
+      terug.type = 'button';
+      terug.className = 'bev-ongedaan';
+      terug.textContent = 'Ongedaan';
+      terug.setAttribute('aria-label', item.naam + ' ongedaan maken');
+      terug.addEventListener('click', () => {
+        window.laatsteOngedaan(id);
+        kaart.remove();
+      });
+      kaart.append(terug);
+    }
     bevestigingen.prepend(kaart);
     // Maximaal 3 kaartjes tegelijk
     while (bevestigingen.children.length > 3) bevestigingen.lastElementChild.remove();
-    setTimeout(() => kaart.classList.add('weg'), 1400);
-    setTimeout(() => kaart.remove(), 1800);
+    setTimeout(() => kaart.classList.add('weg'), KAART_DUUR);
+    setTimeout(() => kaart.remove(), KAART_DUUR + 400);
 
     capsule.classList.remove('veer');
     void capsule.offsetWidth; // animatie opnieuw starten
@@ -93,7 +117,7 @@
     laatsteNaam = naam;
     const r = origVoegToe.apply(this, arguments);
     const item = bonNu().find(i => i.naam === naam);
-    if (item) toonBevestiging(item);
+    if (item) toonBevestiging(item, r);
     return r;
   };
 
@@ -129,6 +153,11 @@
   window.sluitBonLade = sluitLade;
 
   capsule.addEventListener('click', openLade);
+  if (ongedaanKnop) {
+    ongedaanKnop.addEventListener('click', () => {
+      if (typeof window.laatsteOngedaan === 'function') window.laatsteOngedaan();
+    });
+  }
   waas.addEventListener('click', sluitLade);
   if (sluitKnop) sluitKnop.addEventListener('click', sluitLade);
 
@@ -143,7 +172,8 @@
 
   // --- Veeggebaren (enkel op de gsm) ---
   // Start: op de kaart (.producten) of de capsule -> veeg links opent;
-  //        op de open lade of de waas -> veeg rechts sluit.
+  //        op de open lade of de waas -> veeg rechts sluit;
+  //        op een bonregel in de open lade (niet op −/+/×) -> veeg links verwijdert die regel.
   // De tabrij (.zijbalk) doet niet mee: die scrolt zelf horizontaal.
   let veeg = null;
   let negeerKlikTot = 0;
@@ -159,7 +189,9 @@
   function bijStart(e) {
     if (e.touches.length !== 1 || !magStarten(e.target)) { veeg = null; return; }
     const t = e.touches[0];
-    veeg = { x: t.clientX, y: t.clientY, richting: null };
+    // Regel om te wissen: enkel in de open lade en niet gestart op een regelknop
+    const regel = isOpen() && !e.target.closest('button') ? e.target.closest('#bon-lijst li') : null;
+    veeg = { x: t.clientX, y: t.clientY, richting: null, regel: regel };
   }
 
   function bijBeweging(e) {
@@ -185,6 +217,10 @@
     if (Math.abs(dx) < DREMPEL || Math.abs(dx) < VERHOUDING * Math.abs(dy)) return;
     if (dx < 0 && !isOpen()) {
       openLade();
+      negeerKlikTot = Date.now() + 450;
+    } else if (dx < 0 && start.regel && start.regel.isConnected && typeof window.verwijderRegel === 'function') {
+      // Regels staan in dezelfde volgorde als `bon` (tekenBon), dus positie = index
+      window.verwijderRegel(Array.prototype.indexOf.call(start.regel.parentNode.children, start.regel));
       negeerKlikTot = Date.now() + 450;
     } else if (dx > 0 && isOpen()) {
       sluitLade();

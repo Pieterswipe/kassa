@@ -154,3 +154,106 @@ body {
   background: #1a3a6e;
   color: #fff;
 }
+
+/* --- Rekeningen en afrekenen --- */
+.dash-link {
+  float: right;
+  font-size: 0.85rem;
+  font-weight: normal;
+  color: #aaa;
+}
+
+.rekening-label {
+  background: #7b2fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.bon-rij {
+  display: flex;
+  gap: 8px;
+}
+
+.rek-knop {
+  flex: 1;
+  padding: 12px 6px;
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.rek-knop:hover {
+  background: #1a3a6e;
+}
+
+.bet-stap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bet-knoppen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bet-knop {
+  padding: 24px 10px;
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bet-knop:hover {
+  background: #e94560;
+}
+
+.bet-knop.bet-sd {
+  background: #7b2fff;
+}
+
+.bet-input {
+  padding: 14px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #0f3460;
+  color: #fff;
+}
+
+.bet-groot {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.qr-vak {
+  padding: 16px;
+  background: #fff;
+  border-radius: 10px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.rek-lijst {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.rek-lijst .rek-knop {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  font-size: 1.1rem;
+}

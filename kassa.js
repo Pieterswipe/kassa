@@ -1,6 +1,9 @@
 // Lijst van items op de bon
 let bon = [];
 
+// Geladen open rekening: { id, naam } of null
+let rekening = null;
+
 // Voeg een item toe aan de bon
 function voegToe(naam, prijs) {
   // Kijk of het item al op de bon staat
@@ -18,35 +21,51 @@ function tekenBon() {
   let lijst = document.getElementById('bon-lijst');
   lijst.innerHTML = '';
 
-  let totaal = 0;
-
   bon.forEach(item => {
     let li = document.createElement('li');
-    li.innerHTML = `
-      <span>${item.aantal}x ${item.naam}</span>
-      <span>€${(item.prijs * item.aantal).toFixed(2).replace('.', ',')}</span>
-    `;
+    let naam = document.createElement('span');
+    naam.textContent = item.aantal + 'x ' + item.naam;
+    let prijs = document.createElement('span');
+    prijs.textContent = euro(Math.round(item.prijs * 100) * item.aantal);
+    li.append(naam, prijs);
     lijst.appendChild(li);
-    totaal += item.prijs * item.aantal;
   });
 
-  document.getElementById('totaal').textContent = '€' + totaal.toFixed(2).replace('.', ',');
+  document.getElementById('totaal').textContent = euro(bonTotaalCents());
+
+  let label = document.getElementById('rekening-label');
+  label.textContent = rekening ? 'Rekening: ' + rekening.naam : '';
+  label.classList.toggle('verborgen', !rekening);
+  document.getElementById('rek-knop').textContent = rekening ? 'Rekening bijwerken' : 'Rekening';
 }
 
-// Afrekenen
+// Bon-items zoals ze in de database komen (bedragen in centen)
+function bonItems() {
+  return bon.map(item => ({
+    product: item.naam,
+    price_cents: Math.round(item.prijs * 100),
+    qty: item.aantal
+  }));
+}
+
+function bonTotaalCents() {
+  return bonItems().reduce((som, i) => som + i.price_cents * i.qty, 0);
+}
+
+// Afrekenen: opent de keuze van betaalmiddel (betalen.js)
 function afrekenen() {
   if (bon.length === 0) {
     alert('De bon is leeg!');
     return;
   }
-  let totaal = bon.reduce((som, item) => som + item.prijs * item.aantal, 0);
-  alert('Betaald! Totaal: €' + totaal.toFixed(2).replace('.', ',') + '\nBedankt!');
-  wisAlles();
+  openBetalen();
 }
 
 // Wis de volledige bon
+// Bij een geladen rekening: rekening ontladen (blijft open in de database)
 function wisAlles() {
   bon = [];
+  rekening = null;
   tekenBon();
 }
 

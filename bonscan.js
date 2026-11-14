@@ -3,9 +3,11 @@
 // Werking in het kort:
 // - De beeldherkenning zit in bonscanner/ (kopie van Pieterswipe/bon-scanner, volledig in de browser).
 // - "Scan bon" opent de camera (createLiveBonScanner). Na herkenning volgt een controlescherm.
-// - Bonartikelen worden op naam gekoppeld aan de kassaknoppen (voegToe('Naam', prijs) in index.html).
-//   Extra koppelingen: vul ALIASSEN hieronder aan. Onbekende artikelen krijgen een prijs die
-//   in localStorage onthouden wordt, of worden overgeslagen.
+// - Bonartikelen worden op naam gekoppeld aan de kassaknoppen in index.html:
+//   voegToe('Naam', prijs) (vaste prijs) of voegToeVraagPrijs('Naam') (prijs wordt gevraagd).
+//   Alle 50 bonartikelen hebben een knop. Extra koppelingen: vul ALIASSEN hieronder aan.
+//   Ontbreekt de prijs, dan vraagt het controlescherm ze ("Prijs nodig"); die prijs wordt
+//   onthouden in localStorage (prijzen.js) en geldt daarna ook voor de knop.
 // - "Op de bon zetten" telt alles bij de huidige `bon` op (zoals voegToe) en roept tekenBon() aan.
 //
 // De pure functies onderaan "Pure functies" worden getest met: node tests/bonscan.cjs
@@ -16,23 +18,28 @@
   // Voorbeeld: 'jupiler 0.0': 'Jupiler'
   const ALIASSEN = {};
 
-  const PRIJZEN_SLEUTEL = 'kassa.bonscan.prijzen';
   const MAX_AANTAL = 999;
+
+  // Gedeelde prijshulpjes (prijzen.js). Pas bij gebruik opgehaald, zodat de laadvolgorde niet uitmaakt.
+  function P() {
+    return typeof module !== 'undefined' && module.exports ? require('./prijzen.js') : window.KassaPrijzen;
+  }
 
   // ---------------------------------------------------------------------------
   // Pure functies (geen DOM)
   // ---------------------------------------------------------------------------
 
-  // Hoofdletters en spaties gelijk trekken: "  Leffe   BLOND " -> "leffe blond"
-  function normNaam(naam) {
-    return String(naam == null ? '' : naam).toLowerCase().replace(/\s+/g, ' ').trim();
-  }
+  const normNaam = naam => P().normNaam(naam);
+  const prijsNaarCent = tekst => P().prijsNaarCent(tekst);
 
-  // Leest naam en prijs uit een onclick zoals "voegToe('Cola', 2.00)". Geeft null als het niet lukt.
+  // Leest naam en prijs uit een onclick zoals "voegToe('Cola', 2.00)".
+  // "voegToeVraagPrijs('Kipcorn')" geeft prijs null. Geeft null als het niet lukt.
   function leesKassaKnop(onclick) {
-    const m = /voegToe\(\s*(['"])(.*?)\1\s*,\s*(\d+(?:\.\d+)?)\s*\)/.exec(String(onclick || ''));
-    if (!m) return null;
-    return { naam: m[2], prijs: Number(m[3]) };
+    const tekst = String(onclick || '');
+    const m = /voegToe\(\s*(['"])(.*?)\1\s*,\s*(\d+(?:\.\d+)?)\s*\)/.exec(tekst);
+    if (m) return { naam: m[2], prijs: Number(m[3]) };
+    const v = /voegToeVraagPrijs\(\s*(['"])(.*?)\1\s*\)/.exec(tekst);
+    return v ? { naam: v[2], prijs: null } : null;
   }
 
   // Zoekt het kassaproduct voor een bonnaam (eerst alias, dan rechtstreeks op naam).
@@ -48,20 +55,21 @@
     return null;
   }
 
-  // "2,50" / "2.5" / "€ 2,50" -> 250 (centen). Ongeldig, 0 of negatief -> null.
-  function prijsNaarCent(tekst) {
-    const t = String(tekst == null ? '' : tekst).replace(/€/g, '').replace(/\s+/g, '');
-    if (!/^\d+([.,]\d{1,2})?$/.test(t)) return null;
-    const cent = Math.round(parseFloat(t.replace(',', '.')) * 100);
-    return cent > 0 ? cent : null;
-  }
-
-  // Koppeling van één bonartikel: kassaproduct, eerder ingegeven prijs, of onbekend.
+  // Koppeling van één bonartikel:
+  // - 'kassa'       kassaknop; vaste prijs van de knop wint, anders de onthouden prijs
+  // - 'prijs-nodig' kassaknop zonder vaste of onthouden prijs (cent null)
+  // - 'geleerd'     geen kassaknop, wel een eerder ingegeven prijs
+  // - 'onbekend'    geen kassaknop en geen prijs (cent null)
   function koppel(bonNaam, producten, geleerd, aliassen) {
+    const g = geleerd || {};
     const p = zoekKassaProduct(bonNaam, producten, aliassen);
-    if (p) return { soort: 'kassa', naam: p.naam, cent: Math.round(p.prijs * 100) };
-    const cent = geleerd && geleerd[normNaam(bonNaam)];
-    if (Number.isInteger(cent) && cent > 0) return { soort: 'geleerd', naam: bonNaam, cent: cent };
+    if (p) {
+      if (p.prijs != null) return { soort: 'kassa', naam: p.naam, cent: Math.round(p.prijs * 100) };
+      const cent = P().geleerdePrijs(p.naam, g);
+      return cent ? { soort: 'kassa', naam: p.naam, cent: cent } : { soort: 'prijs-nodig', naam: p.naam, cent: null };
+    }
+    const cent = P().geleerdePrijs(bonNaam, g);
+    if (cent) return { soort: 'geleerd', naam: bonNaam, cent: cent };
     return { soort: 'onbekend', naam: bonNaam, cent: null };
   }
 
@@ -107,7 +115,7 @@
       if (cent == null) {
         cent = prijsNaarCent(invoer.tekst);
         if (cent == null) { zonderPrijs++; continue; }
-        nieuwePrijzen[normNaam(r.bonNaam)] = cent;
+        nieuwePrijzen[normNaam(r.koppeling.naam)] = cent; // kassanaam: dan geldt de prijs ook voor de knop
       }
       uit.push({ naam: r.koppeling.naam, prijs: cent / 100, aantal: r.aantal });
     }
@@ -144,7 +152,7 @@
   let kijken = false;   // camera loopt en wacht op een bon
   let regels = [];      // regels van het controlescherm
 
-  // Kassaproducten uit de knoppen in index.html, zodat nieuwe knoppen vanzelf meetellen.
+  // Kassaproducten uit de knoppen in index.html (bij elke scan gelezen), zodat nieuwe knoppen vanzelf meetellen.
   function leesKassaProducten() {
     const lijst = [];
     document.querySelectorAll('[onclick*="voegToe"]').forEach(knop => {
@@ -152,16 +160,6 @@
       if (p && !lijst.some(x => x.naam === p.naam)) lijst.push(p);
     });
     return lijst;
-  }
-  const kassaProducten = leesKassaProducten();
-
-  function leesGeleerd() {
-    try { return JSON.parse(localStorage.getItem(PRIJZEN_SLEUTEL)) || {}; } catch (e) { return {}; }
-  }
-
-  function bewaarGeleerd(nieuw) {
-    if (!Object.keys(nieuw).length) return;
-    try { localStorage.setItem(PRIJZEN_SLEUTEL, JSON.stringify(Object.assign(leesGeleerd(), nieuw))); } catch (e) {}
   }
 
   function prijsTekst(cent) {
@@ -312,7 +310,8 @@
     if (!vorm || !Array.isArray(result.rows) || result.rows.length !== vorm.products.length) {
       throw new Error('onvolledige bon');
     }
-    const geleerd = leesGeleerd();
+    const geleerd = P().leesGeleerd();
+    const kassaProducten = leesKassaProducten();
     regels = regelsUitResultaat(result, vorm.products).map(r => Object.assign(r, {
       koppeling: koppel(r.bonNaam, kassaProducten, geleerd, ALIASSEN),
       invoer: { tekst: '', overslaan: false }
@@ -343,9 +342,10 @@
     li.dataset.i = String(i);
 
     const kop = maak('div', 'bs-regel-kop');
-    kop.append(maak('span', 'bs-naam', k.soort === 'kassa' ? k.naam : r.bonNaam));
+    kop.append(maak('span', 'bs-naam', k.naam));
     if (k.soort === 'kassa') kop.append(maak('span', 'bs-prijs', prijsTekst(k.cent)));
     else if (k.soort === 'geleerd') kop.append(maak('span', 'bs-prijs', 'Bekend: ' + prijsTekst(k.cent)));
+    else if (k.soort === 'prijs-nodig') kop.append(maak('span', 'bs-prijs bs-niet-in-kassa', 'Prijs nodig'));
     else kop.append(maak('span', 'bs-prijs bs-niet-in-kassa', 'Niet in kassa'));
     li.append(kop);
 
@@ -380,7 +380,7 @@
     stap.append(min, maak('span', 'bs-aantal', String(r.aantal)), plus);
     li.append(stap);
 
-    if (k.soort === 'onbekend' && r.aantal > 0) {
+    if (k.cent == null && r.aantal > 0) { // 'prijs-nodig' of 'onbekend'
       const rij = maak('div', 'bs-prijsveld');
       const veld = maak('input', 'bet-input bs-prijs-input');
       veld.dataset.prijs = '1';
@@ -454,9 +454,10 @@
       alert('De bon van de kassa is niet beschikbaar.');
       return;
     }
-    bewaarGeleerd(v.nieuwePrijzen);
+    P().bewaarGeleerd(v.nieuwePrijzen);
     voegRegelsToe(bon, v.uit); // `bon` en tekenBon komen uit kassa.js
     tekenBon();
+    if (typeof toonOnthoudenPrijzen === 'function') toonOnthoudenPrijzen(); // nieuwe prijzen op de knoppen
     sluitBonScan();
   }
 

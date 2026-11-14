@@ -70,13 +70,46 @@ function wisAlles() {
 }
 
 // Toon een categorie en verberg de andere
-function toonCategorie(categorie) {
+function toonCategorie(categorie, tab) {
   // Verberg alle categorieën
   document.querySelectorAll('.categorie').forEach(el => el.classList.add('verborgen'));
   // Toon de gekozen categorie
   document.getElementById(categorie).classList.remove('verborgen');
 
   // Pas de actieve tab aan
-  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('actief'));
-  event.target.classList.add('actief');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('actief'));
+  (tab || event.target).classList.add('actief');
 }
+
+// Knop zonder vaste prijs: gebruik de onthouden prijs, of vraag ze één keer.
+// Prijzen staan in localStorage via prijzen.js (dezelfde als de bonscanner).
+function voegToeVraagPrijs(naam) {
+  const P = window.KassaPrijzen;
+  let cent = P.geleerdePrijs(naam);
+  if (cent == null) {
+    const tekst = prompt('Prijs voor ' + naam + ' (bv. 2,50):');
+    if (tekst === null) return; // geannuleerd
+    cent = P.prijsNaarCent(tekst);
+    if (cent == null) {
+      alert('Ongeldige prijs. Typ bv. 2,50');
+      return;
+    }
+    P.bewaarGeleerd({ [P.normNaam(naam)]: cent });
+    toonOnthoudenPrijzen();
+  }
+  voegToe(naam, cent / 100);
+}
+
+// Zet de onthouden prijzen op de knoppen zonder vaste prijs ("prijs?" als er nog geen is).
+function toonOnthoudenPrijzen() {
+  const P = window.KassaPrijzen;
+  if (!P) return;
+  const geleerd = P.leesGeleerd();
+  document.querySelectorAll('[onclick^="voegToeVraagPrijs("]').forEach(knop => {
+    const m = /voegToeVraagPrijs\('(.*)'\)/.exec(knop.getAttribute('onclick'));
+    const cent = m && P.geleerdePrijs(m[1], geleerd);
+    knop.querySelector('.knop-prijs').textContent = cent ? euro(cent) : 'prijs?';
+    knop.classList.toggle('zonder-prijs', !cent);
+  });
+}
+toonOnthoudenPrijzen();

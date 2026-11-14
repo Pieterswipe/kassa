@@ -273,7 +273,7 @@ test('kassa.js bouwt tabs en knoppen uit producten.js, elke knop met prijs', () 
   const opslag = { 'kassa.bonscan.prijzen': JSON.stringify({ koffie: 190, cola: 999, 'gin-tonic': 900 }) };
   const k = laadKassa(opslag);
 
-  assert.deepEqual(k.tabs.map(t => t.textContent), categorieen.map(c => c.titel));
+  assert.deepEqual(k.tabs.map(t => t.textContent), ['Fris', 'Bier', 'Warm', 'Snacks', 'Broodjes', 'Zoet']);
   assert.ok(k.tabs[0].classList.contains('actief'));
   assert.deepEqual(k.cats.map(c => c.id), categorieen.map(c => c.id));
   assert.deepEqual(k.cats.map(c => c.classList.contains('verborgen')), [false, true, true, true, true, true]);

@@ -180,6 +180,24 @@ function bonLeegmaken() {
   wisAlles();
 }
 
+// Korte tablabels voor de balk boven de kaart; de volle titel (producten.js) staat in
+// aria-label/title van de tab en in het bijschrift.
+const KORTE_TAB = { fris: 'Fris', bier: 'Bier', warm: 'Warm', snack: 'Snacks', brood: 'Broodjes', zoet: 'Zoet' };
+
+// Bijschrift onder de tabs: volle titel + "N artikelen" (ontbreekt in de nep-DOM van de tests)
+function toonBijschrift(categorie) {
+  const vak = document.getElementById('kaart-bijschrift');
+  const c = (window.KASSA_CATEGORIEEN || []).find(x => x.id === categorie);
+  if (!vak || !c) return;
+  const n = (window.KASSA_PRODUCTEN || []).filter(p => p.categorie === categorie).length;
+  const titel = document.createElement('span');
+  titel.textContent = c.titel;
+  const aantal = document.createElement('span');
+  aantal.className = 'sc';
+  aantal.textContent = n + (n === 1 ? ' artikel' : ' artikelen');
+  vak.replaceChildren(titel, aantal);
+}
+
 // Toon een categorie en verberg de andere
 function toonCategorie(categorie, tab) {
   // Verberg alle categorieën
@@ -190,6 +208,10 @@ function toonCategorie(categorie, tab) {
   // Pas de actieve tab aan
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('actief'));
   (tab || event.target).classList.add('actief');
+
+  toonBijschrift(categorie);
+  const vak = document.getElementById('knoppen-vak');
+  if (vak) vak.scrollTop = 0;
 }
 
 // Knop zonder vaste prijs: gebruik de onthouden prijs, of vraag ze één keer.
@@ -234,8 +256,14 @@ function bouwProductKnoppen() {
   vak.replaceChildren();
   categorieen.forEach((c, i) => {
     const tab = document.createElement('button');
+    tab.type = 'button';
     tab.className = 'tab' + (i === 0 ? ' actief' : '');
-    tab.textContent = c.titel;
+    tab.textContent = KORTE_TAB[c.id] || c.titel;
+    // (guard: de nep-DOM in tests/*.cjs kent geen setAttribute)
+    if (typeof tab.setAttribute === 'function') {
+      tab.setAttribute('aria-label', c.titel);
+      tab.setAttribute('title', c.titel);
+    }
     tab.addEventListener('click', () => toonCategorie(c.id, tab));
     tabs.appendChild(tab);
 
@@ -263,6 +291,7 @@ function bouwProductKnoppen() {
     });
     vak.appendChild(cat);
   });
+  toonBijschrift(categorieen[0] && categorieen[0].id);
 }
 // Vaste prijs uit producten.js wint: oude onthouden prijzen voor die artikelen weg.
 if (window.KassaPrijzen && window.KASSA_PRODUCTEN) window.KassaPrijzen.ruimOp(window.KASSA_PRODUCTEN);

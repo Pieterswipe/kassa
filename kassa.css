@@ -114,56 +114,6 @@ input:focus-visible {
   margin-top: 4px;
 }
 
-/* Tabs: verticale lijst in de zijbalk */
-.tabs {
-  display: flex;
-  flex-direction: column;
-  margin: 14px 0;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.tab {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 8px 6px;
-  background: none;
-  border: 0;
-  color: rgba(255, 255, 255, 0.65);
-  font-family: var(--serif);
-  font-size: 16px;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.tab::before {
-  content: "";
-  flex: none;
-  width: 14px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.4;
-  transition: width 0.2s;
-}
-
-.tab:hover {
-  color: #fff;
-}
-
-.tab.actief {
-  color: #fff;
-  font-style: italic;
-}
-
-.tab.actief::before {
-  width: 26px;
-  opacity: 1;
-}
-
 .dash-link {
   margin-top: auto;
   display: block;
@@ -189,6 +139,8 @@ input:focus-visible {
   min-height: 0;
   min-width: 0;
   padding: 22px 26px;
+  container-type: inline-size;
+  container-name: kaart;
 }
 
 .kaart-kop {
@@ -212,82 +164,168 @@ input:focus-visible {
   text-align: right;
 }
 
-/* Productknoppen: menukaart-rijen die binnen het vak scrollen */
+/* Tabs: balk van 6 korte tabs boven de kaart (kassa.js; volle titel in aria-label en bijschrift) */
+.tabs {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-top: 8px;
+  border: 1px solid var(--ink);
+  background: #fff;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 2px;
+  background: none;
+  border: 0;
+  border-left: 1px solid var(--lijn);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 15px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab:first-child {
+  border-left: 0;
+}
+
+.tab:hover {
+  background: var(--ivoor2);
+}
+
+.tab.actief {
+  background: var(--ink);
+  color: #fff;
+  font-style: italic;
+}
+
+/* Bijschrift: volle titel van de categorie + aantal artikelen */
+.kaart-bijschrift {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 1.6em;
+  padding: 9px 2px 0;
+  font-size: 16px;
+  font-style: italic;
+}
+
+.kaart-bijschrift .sc {
+  color: var(--grijs);
+  font-size: 10px;
+}
+
+/* Productknoppen: dicht raster van compacte tegels dat binnen het vak scrolt */
 .knoppen-vak {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-top: 8px;
 }
 
 .categorie {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  column-gap: 26px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
   align-content: start;
 }
 
+/* Tablet en breder: minstens 6 kolommen, 7–8 als de kaart breed genoeg is */
+@media (min-width: 701px) {
+  .categorie { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+}
+
+@container kaart (min-width: 620px) {
+  .categorie { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+
+@container kaart (min-width: 760px) {
+  .categorie { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
+
+/* Moet winnen van display: grid hierboven (ook binnen @container) */
 .categorie.verborgen {
   display: none;
 }
 
-/* Knop = "naam ........ prijs". kassa.js zet: naam, <br>, <span class="knop-prijs"> */
+/* Tegel: naam bovenaan, prijs rechtsonder. kassa.js zet: naam, <br>, <span class="knop-prijs"> */
 .item-knop {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-height: 56px;
-  padding: 14px 6px;
-  background: none;
-  border: 0;
-  border-bottom: 1px solid var(--lijn);
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 7px 7px 6px;
+  background: #fff;
+  border: 1px solid var(--lijn);
+  border-radius: 0;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: 17px;
-  line-height: 1.25;
+  font-size: 14.5px;
+  line-height: 1.12;
   text-align: left;
-  overflow-wrap: anywhere;
-  transition: background 0.15s;
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+@media (min-width: 701px) {
+  .item-knop { min-height: 66px; padding: 8px 5px 7px; font-size: 13px; }
+}
+
+@container kaart (min-width: 620px) {
+  .item-knop { padding: 8px 8px 7px; font-size: 15px; }
 }
 
 .item-knop br {
   display: none;
 }
 
-/* Stippellijn tussen naam en prijs */
-.item-knop::after {
-  content: "";
-  order: 1;
-  flex: 1 1 16px;
-  min-width: 16px;
-  border-bottom: 1px dotted var(--stip);
-  transform: translateY(-4px);
-}
-
 .knop-prijs {
-  order: 2;
-  flex: none;
+  align-self: flex-end;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--grijs);
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  font-variant-numeric: oldstyle-nums tabular-nums;
+  font-variant-numeric: tabular-nums;
 }
 
-.item-knop:hover {
-  background: var(--ivoor2);
+@media (hover: hover) {
+  .item-knop:hover {
+    border-color: var(--ink);
+  }
 }
 
 .item-knop:active {
   background: var(--ink);
+  border-color: var(--ink);
   color: #fff;
+}
+
+.item-knop:active .knop-prijs {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Nog geen prijs: knop vraagt de prijs bij de eerste tik */
 .item-knop.zonder-prijs .knop-prijs {
-  color: var(--grijs);
   font-style: italic;
-}
-
-.item-knop.zonder-prijs:active .knop-prijs {
-  color: inherit;
 }
 
 /* --- Rechterkant: bon --- */
@@ -881,9 +919,8 @@ input:focus-visible {
     gap: 14px;
     flex: none;
     text-align: left;
-    padding: 0 18px 0 0;
+    padding: 0;
     border-bottom: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.18);
   }
 
   .wapen {
@@ -900,37 +937,13 @@ input:focus-visible {
     font-size: 15px;
   }
 
-  .tabs {
-    flex-direction: row;
-    flex: 1;
-    min-width: 0;
-    margin: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: 6px;
-  }
-
   .clubnaam {
     max-width: 150px;
   }
 
-  /* Horizontale tabs: actieve tab onderstreept in plaats van met een streep ervoor */
-  .tab {
-    flex: none;
-    padding: 8px 9px;
-    border-bottom: 1px solid transparent;
-  }
-
-  .tab::before {
-    display: none;
-  }
-
-  .tab.actief {
-    border-bottom-color: #fff;
-  }
-
   .dash-link {
     margin-top: 0;
+    margin-left: auto;
     flex: none;
   }
 
@@ -968,10 +981,17 @@ input:focus-visible {
   }
 
   .tabs {
-    order: 3;
-    flex: 1 0 100%;
-    border-top: 1px solid rgba(255, 255, 255, 0.18);
-    padding-top: 4px;
+    margin-top: 6px;
+  }
+
+  .tab {
+    min-height: 42px;
+    font-size: 13.5px;
+  }
+
+  .kaart-bijschrift {
+    font-size: 15px;
+    padding-top: 7px;
   }
 
   .dash-link {

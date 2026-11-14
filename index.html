@@ -13,7 +13,7 @@
 
   <div class="kassa">
 
-    <!-- Zijbalk: clubwapen, categorie-tabs en dashboard -->
+    <!-- Zijbalk: clubwapen en dashboard -->
     <aside class="zijbalk">
       <div class="wapen-blok">
         <span class="wapen"><img src="assets/clublogo.png" alt="Clublogo KVC De Toekomst Borsbeke"></span>
@@ -22,10 +22,6 @@
           <span class="sc">Kantine · Kassa</span>
         </div>
       </div>
-      <!-- Tabs en productknoppen worden opgebouwd uit producten.js (bouwProductKnoppen in kassa.js).
-           Knop met vaste prijs: voegToe(naam, prijs). Knop zonder prijs: voegToeVraagPrijs(naam)
-           vraagt één keer de prijs en onthoudt die (prijzen.js). -->
-      <nav id="tabs" class="tabs"></nav>
       <a href="dashboard.html" class="dash-link">Dashboard</a>
     </aside>
 
@@ -35,6 +31,12 @@
         <h2>De kaart</h2>
         <span class="sc">Kantine De Vrede</span>
       </div>
+      <!-- Korte tabs boven een dicht raster. Tabs, bijschrift en productknoppen worden opgebouwd
+           uit producten.js (bouwProductKnoppen in kassa.js).
+           Knop met vaste prijs: voegToe(naam, prijs). Knop zonder prijs: voegToeVraagPrijs(naam)
+           vraagt één keer de prijs en onthoudt die (prijzen.js). -->
+      <nav id="tabs" class="tabs" aria-label="Categorieën"></nav>
+      <p id="kaart-bijschrift" class="kaart-bijschrift" aria-live="polite"></p>
       <div id="knoppen-vak" class="knoppen-vak"></div>
     </div>
 

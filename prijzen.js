@@ -38,7 +38,19 @@
     return Number.isInteger(cent) && cent > 0 ? cent : null;
   }
 
-  const api = { PRIJZEN_SLEUTEL, normNaam, prijsNaarCent, leesGeleerd, bewaarGeleerd, geleerdePrijs };
+  // Ruimt onthouden prijzen op van artikelen die nu een vaste prijs hebben (de lijst wint).
+  // Geeft het aantal verwijderde prijzen terug.
+  function ruimOp(producten) {
+    const geleerd = leesGeleerd();
+    const vast = new Set((producten || []).filter(p => p.prijs != null).map(p => normNaam(p.naam)));
+    const weg = Object.keys(geleerd).filter(k => vast.has(normNaam(k)));
+    if (!weg.length) return 0;
+    weg.forEach(k => { delete geleerd[k]; });
+    try { global.localStorage.setItem(PRIJZEN_SLEUTEL, JSON.stringify(geleerd)); } catch (e) {}
+    return weg.length;
+  }
+
+  const api = { PRIJZEN_SLEUTEL, normNaam, prijsNaarCent, leesGeleerd, bewaarGeleerd, geleerdePrijs, ruimOp };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.KassaPrijzen = api;
 })(typeof window === 'undefined' ? globalThis : window);

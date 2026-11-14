@@ -127,13 +127,17 @@ const bs = require(path.join(root, 'bonscan.js'));
 // Kassaproducten: één bron, producten.js (index.html bouwt er de knoppen mee op)
 const { KASSA_PRODUCTEN: kassa, KASSA_CATEGORIEEN } = require(path.join(root, 'producten.js'));
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+// Elk artikel heeft nu een vaste prijs. Om de terugval ("Prijs nodig") te testen:
+// een kopie van de lijst waarin enkele artikelen (zoals vroeger) geen prijs hebben.
+const zonderPrijs = (lijst, namen) => lijst.map(p => (namen.includes(p.naam) ? Object.assign({}, p, { prijs: null }) : p));
+const testKassa = zonderPrijs(kassa, ['Koffie', 'Kipcorn', 'Boulet']);
 
 test('kassaproducten uit producten.js', () => {
   assert.equal(kassa.length, 52); // 50 bonartikelen + Leffe Blond + Stella Artois
   const kort = n => { const p = kassa.find(x => x.naam === n); return { naam: p.naam, prijs: p.prijs }; };
   assert.deepEqual(kort('Cola'), { naam: 'Cola', prijs: 2 });
   assert.deepEqual(kort('Leffe Blond'), { naam: 'Leffe Blond', prijs: 3 });
-  assert.deepEqual(kort('Kipcorn'), { naam: 'Kipcorn', prijs: null });
+  assert.deepEqual(kort('Kipcorn'), { naam: 'Kipcorn', prijs: 2.8 });
   // index.html heeft geen eigen productlijst meer, wel de lege vakken en producten.js
   assert.equal(/onclick="voegToe/.test(html), false);
   assert.ok(html.includes('id="tabs"') && html.includes('id="knoppen-vak"'));
@@ -157,7 +161,9 @@ test('alle 50 bonartikelen zijn een kassaknop (Z50 en K50)', () => {
     assert.equal(vorm.products.length, 50);
     for (const naam of vorm.products) {
       const k = bs.koppel(naam, kassa, {}, bs.ALIASSEN);
-      assert.ok(k.soort === 'kassa' || k.soort === 'prijs-nodig', vorm.id + ' ' + naam + ' -> ' + k.soort);
+      // elk bonartikel heeft nu een vaste prijs: nooit meer "Prijs nodig"
+      assert.equal(k.soort, 'kassa', vorm.id + ' ' + naam + ' -> ' + k.soort);
+      assert.ok(k.cent > 0, naam);
       assert.equal(k.naam, naam);
     }
   }
@@ -210,9 +216,9 @@ test('prijs parsen naar centen', () => {
 test('koppel: kassa, prijs nodig, geleerd, onbekend', () => {
   assert.deepEqual(bs.koppel('Duvel', kassa, {}, {}), { soort: 'kassa', naam: 'Duvel', cent: 350 });
   // Knop zonder vaste prijs + onthouden prijs -> gewoon de prijs
-  assert.deepEqual(bs.koppel('Koffie', kassa, { koffie: 180 }, {}), { soort: 'kassa', naam: 'Koffie', cent: 180 });
+  assert.deepEqual(bs.koppel('Koffie', testKassa, { koffie: 190 }, {}), { soort: 'kassa', naam: 'Koffie', cent: 190 });
   // Knop zonder vaste of onthouden prijs -> prijs vragen
-  assert.deepEqual(bs.koppel('Kipcorn', kassa, {}, {}), { soort: 'prijs-nodig', naam: 'Kipcorn', cent: null });
+  assert.deepEqual(bs.koppel('Kipcorn', testKassa, {}, {}), { soort: 'prijs-nodig', naam: 'Kipcorn', cent: null });
   // Geen knop
   assert.deepEqual(bs.koppel('Gin-tonic', kassa, { 'gin-tonic': 900 }, {}), { soort: 'geleerd', naam: 'Gin-tonic', cent: 900 });
   assert.deepEqual(bs.koppel('Gin-tonic', kassa, {}, {}), { soort: 'onbekend', naam: 'Gin-tonic', cent: null });
@@ -221,11 +227,35 @@ test('koppel: kassa, prijs nodig, geleerd, onbekend', () => {
 test('bestaande (vaste) prijs wint van een onthouden prijs', () => {
   assert.equal(bs.koppel('Duvel', kassa, { duvel: 999 }, {}).cent, 350);
   assert.equal(bs.koppel('Cola', kassa, { cola: 999 }, {}).cent, 200);
+  // ook voor de nieuw geprijsde artikelen (vroeger prijsloos, toen onthouden)
+  assert.deepEqual(bs.koppel('Koffie', kassa, { koffie: 999 }, {}), { soort: 'kassa', naam: 'Koffie', cent: 180 });
+  assert.equal(bs.koppel('Kipcorn', kassa, { kipcorn: 320 }, {}).cent, 280);
+  // en in de bestelling (bestelscan): vaste prijs, geen nieuwe prijs om te onthouden
+  const r = bs.regelsUitBestelling([{ id: '31', aantal: 1 }], kassa, { kipcorn: 320 });
+  r[0].invoer.tekst = '9,99';
+  const v = bs.verzamel(r);
+  assert.deepEqual(v.uit, [{ naam: 'Kipcorn', prijs: 2.8, aantal: 1 }]);
+  assert.deepEqual(v.nieuwePrijzen, {});
+});
+
+test('ruimOp: onthouden prijzen van artikelen met vaste prijs verdwijnen', () => {
+  const pr = require(path.join(root, 'prijzen.js'));
+  const opslag = { 'kassa.bonscan.prijzen': JSON.stringify({ koffie: 190, kipcorn: 320, cola: 999, 'gin-tonic': 900 }) };
+  global.localStorage = { getItem: k => (k in opslag ? opslag[k] : null), setItem: (k, w) => { opslag[k] = String(w); } };
+  try {
+    assert.equal(pr.ruimOp(testKassa), 1);              // alleen Cola heeft hier een vaste prijs
+    assert.deepEqual(pr.leesGeleerd(), { koffie: 190, kipcorn: 320, 'gin-tonic': 900 });
+    assert.equal(pr.ruimOp(kassa), 2);                  // echte lijst: Koffie en Kipcorn nu ook vast
+    assert.deepEqual(pr.leesGeleerd(), { 'gin-tonic': 900 }); // geen kassaknop: blijft bewaard
+    assert.equal(pr.ruimOp(kassa), 0);                  // niets meer te doen
+  } finally {
+    delete global.localStorage;
+  }
 });
 
 test('prijsloos artikel: prijs vragen, onthouden, daarna gekend', () => {
   const regel = () => ({ bonNaam: 'Kipcorn', aantal: 2, onzeker: false,
-    koppeling: bs.koppel('Kipcorn', kassa, geleerd, {}), invoer: { tekst: '', overslaan: false } });
+    koppeling: bs.koppel('Kipcorn', testKassa, geleerd, {}), invoer: { tekst: '', overslaan: false } });
   let geleerd = {};
   let r = regel();
   assert.equal(r.koppeling.soort, 'prijs-nodig');
@@ -303,9 +333,9 @@ test('regels uit scanresultaat en verzamelen', () => {
   rows[0] = { quantity: 2 };                                              // Cola
   rows[10] = { quantity: null, inkCandidates: [2, 5], manualReason: 'unstable' }; // Jupiler, dubbel
   rows[19] = { quantity: null, inkCandidates: [], manualReason: 'unseen' };       // Koffie, ongelezen
-  rows[30] = { quantity: 1 };                                             // Kipcorn: knop zonder prijs
+  rows[30] = { quantity: 1 };                                             // Kipcorn: knop zonder prijs (testKassa)
   const regels = bs.regelsUitResultaat({ rows }, namen).map(r => Object.assign(r, {
-    koppeling: bs.koppel(r.bonNaam, kassa, {}, {}), invoer: { tekst: '', overslaan: false }
+    koppeling: bs.koppel(r.bonNaam, testKassa, {}, {}), invoer: { tekst: '', overslaan: false }
   }));
   assert.deepEqual(regels.map(r => r.index), [0, 10, 19, 30]);
   assert.equal(regels[1].reden, 'Lijkt aangeduid bij 2 of 5.');

@@ -362,13 +362,17 @@ function stopPolling() {
 
 // --- Resultaatschermen ---
 
-function toonGeslaagd() {
+async function toonGeslaagd() {
+  const ref = sdQRCode;
   wissenQR();
   toonSdScherm('sd-success');
-  setTimeout(() => {
-    wisAlles();
+  // Order bewaren (betalen.js). Mislukt dat, dan toont die een foutmelding en blijft de bon staan.
+  const opgeslagen = await bewaarBetaling('swipedrinks', ref);
+  if (!opgeslagen) {
     sluitSwipedrinks();
-  }, 2000);
+    return;
+  }
+  setTimeout(sluitSwipedrinks, 2000);
 }
 
 function toonMislukt(boodschap) {

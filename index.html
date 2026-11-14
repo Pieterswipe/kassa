@@ -35,11 +35,16 @@
 
     <!-- Rechterkant: bon -->
     <div class="bon">
-      <h2>Bon</h2>
+      <h2>Bon <a href="dashboard.html" class="dash-link">Dashboard</a></h2>
+      <div id="rekening-label" class="rekening-label verborgen"></div>
       <ul id="bon-lijst"></ul>
       <div class="totaal">Totaal: <span id="totaal">€0,00</span></div>
       <button class="afrekenen-knop" onclick="afrekenen()">Afrekenen</button>
       <button class="sd-knop" onclick="openSwipedrinks()">Swipedrinks</button>
+      <div class="bon-rij">
+        <button id="rek-knop" class="rek-knop" onclick="rekeningKnop()">Rekening</button>
+        <button class="rek-knop" onclick="toonOpenRekeningen()">Openstaande rekeningen</button>
+      </div>
       <button class="wis-knop" onclick="wisAlles()">Wis bon</button>
     </div>
 
@@ -96,9 +101,97 @@
     </div>
   </div>
 
+  <!-- Afrekenen en rekeningen (popup) -->
+  <div id="bet-overlay" class="sd-overlay verborgen">
+    <div class="sd-scherm">
+
+      <!-- Keuze betaalmiddel -->
+      <div id="bet-keuze" class="bet-stap">
+        <h2>Afrekenen</h2>
+        <p class="sd-totaal-label">Totaal: <strong class="bet-totaal"></strong></p>
+        <div class="bet-knoppen">
+          <button class="bet-knop" onclick="toonCash()">Cash</button>
+          <button class="bet-knop" onclick="betaalDirect('bon')">Bon</button>
+          <button class="bet-knop" onclick="toonBetScherm('bet-bc')">Bancontact</button>
+          <button class="bet-knop bet-sd" onclick="naarSwipedrinks()">Swipedrinks</button>
+        </div>
+        <button class="sd-annuleer" onclick="sluitBetalen()">Annuleer</button>
+      </div>
+
+      <!-- Cash -->
+      <div id="bet-cash" class="bet-stap verborgen">
+        <h2>Cash</h2>
+        <p class="sd-totaal-label">Totaal: <strong class="bet-totaal"></strong></p>
+        <input id="bet-ontvangen" class="bet-input" inputmode="decimal" placeholder="Ontvangen (optioneel)" oninput="toonWisselgeld()">
+        <p id="bet-wisselgeld" class="sd-totaal-label"></p>
+        <button class="afrekenen-knop" onclick="betaalDirect('cash')">Bevestig cash</button>
+        <button class="sd-annuleer" onclick="toonBetScherm('bet-keuze')">Terug</button>
+      </div>
+
+      <!-- Bancontact: terminal of QR -->
+      <div id="bet-bc" class="bet-stap verborgen">
+        <h2>Bancontact</h2>
+        <p class="sd-totaal-label">Totaal: <strong class="bet-totaal"></strong></p>
+        <div class="bet-knoppen">
+          <button class="bet-knop" onclick="startBancontact('terminal')">Terminal</button>
+          <button class="bet-knop" onclick="startBancontact('qr')">QR</button>
+        </div>
+        <button class="sd-annuleer" onclick="toonBetScherm('bet-keuze')">Terug</button>
+      </div>
+
+      <!-- Wachten (opslaan of Bancontact) -->
+      <div id="bet-wacht" class="bet-stap verborgen">
+        <h2 id="bet-wacht-titel">Even geduld</h2>
+        <div id="bet-qr" class="qr-vak verborgen"></div>
+        <p id="bet-wacht-tekst" class="sd-wacht"></p>
+        <button id="bet-wacht-annuleer" class="sd-annuleer" onclick="annuleerWacht()">Annuleer</button>
+      </div>
+
+      <!-- Gelukt -->
+      <div id="bet-ok" class="bet-stap verborgen sd-success-scherm">
+        <div class="sd-icoon">✓</div>
+        <h2 id="bet-ok-tekst"></h2>
+        <p id="bet-ok-extra" class="bet-groot"></p>
+        <button class="sd-annuleer" onclick="sluitBetalen()">Sluiten</button>
+      </div>
+
+      <!-- Fout -->
+      <div id="bet-fout" class="bet-stap verborgen sd-failed-scherm">
+        <div class="sd-icoon">✗</div>
+        <p id="bet-fout-tekst"></p>
+        <button id="bet-fout-opnieuw" class="sd-opnieuw verborgen">Opnieuw</button>
+        <button class="sd-annuleer" onclick="sluitBetalen()">Sluiten</button>
+      </div>
+
+      <!-- Rekening: naam ingeven -->
+      <div id="rek-naam" class="bet-stap verborgen">
+        <h2>Op rekening zetten</h2>
+        <p class="sd-totaal-label">Totaal: <strong class="bet-totaal"></strong></p>
+        <input id="rek-naam-input" class="bet-input" list="klanten-lijst" placeholder="Naam klant" autocomplete="off"
+               onkeydown="if (event.key === 'Enter') rekeningOpslaan()">
+        <datalist id="klanten-lijst"></datalist>
+        <p id="rek-naam-status" class="sd-totaal-label"></p>
+        <button class="afrekenen-knop" onclick="rekeningOpslaan()">Op rekening zetten</button>
+        <button class="sd-annuleer" onclick="sluitBetalen()">Annuleer</button>
+      </div>
+
+      <!-- Openstaande rekeningen -->
+      <div id="rek-lijst" class="bet-stap verborgen">
+        <h2>Openstaande rekeningen</h2>
+        <p id="rek-lijst-status" class="sd-totaal-label"></p>
+        <div id="rek-lijst-knoppen" class="rek-lijst"></div>
+        <button class="sd-annuleer" onclick="sluitBetalen()">Sluiten</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="db.js"></script>
   <script src="kassa.js"></script>
   <script src="swipedrinks.js"></script>
+  <script src="betalen.js"></script>
 </body>
 </html>

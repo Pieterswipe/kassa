@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; background: #1a1a2e; color: #fff; margin: 0; padding: 20px; }
+    main { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    header h1 { flex: 1; margin: 0; }
+    a { color: #aaa; }
+    input { padding: 10px; font-size: 1.1rem; border-radius: 8px; border: 1px solid #444; background: #0f3460; color: #fff; }
+    section { background: #16213e; border-radius: 12px; padding: 20px; }
+    h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #0f3460; }
+    th:not(:first-child), td:not(:first-child) { text-align: right; }
+    tr.totaalrij td { font-weight: bold; border-top: 2px solid #e94560; }
+    .fout { color: #ff4c4c; }
+    .leeg { color: #aaa; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Dashboard</h1>
+      <input type="date" id="dag" onchange="laadDashboard()">
+      <a href="index.html">Terug naar kassa</a>
+    </header>
+    <p id="fout" class="fout"></p>
+
+    <section>
+      <h2>Verkopen per betaalmiddel</h2>
+      <div id="per-betaalmiddel"></div>
+    </section>
+
+    <section>
+      <h2>Verkochte producten</h2>
+      <div id="per-product"></div>
+    </section>
+
+    <section>
+      <h2>Openstaande rekeningen</h2>
+      <div id="open-rekeningen"></div>
+    </section>
+
+    <section>
+      <h2>Laatste 7 dagen</h2>
+      <div id="per-dag"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+  <script src="db.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

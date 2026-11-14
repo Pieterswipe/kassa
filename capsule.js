@@ -72,8 +72,19 @@
   window.verversCapsule = verversCapsule;
 
   // --- Bevestigingskaartje boven de capsule ---
+  // Altijd maar één kaartje: een nieuwe tik vervangt het vorige meteen (timers van het oude
+  // kaartje worden geannuleerd), daarna vervaagt het na KAART_DUUR.
+  let kaartTimers = [];
+
+  function wisKaartje() {
+    kaartTimers.forEach(clearTimeout);
+    kaartTimers = [];
+    if (bevestigingen) bevestigingen.replaceChildren();
+  }
+
   function toonBevestiging(item, id) {
     if (!bevestigingen || !GSM.matches || isOpen()) return;
+    wisKaartje();
     const kaart = document.createElement('div');
     kaart.className = 'bev';
     const plus = document.createElement('b');
@@ -96,15 +107,15 @@
       terug.setAttribute('aria-label', item.naam + ' ongedaan maken');
       terug.addEventListener('click', () => {
         window.laatsteOngedaan(id);
-        kaart.remove();
+        if (kaart.isConnected) wisKaartje();
       });
       kaart.append(terug);
     }
-    bevestigingen.prepend(kaart);
-    // Maximaal 3 kaartjes tegelijk
-    while (bevestigingen.children.length > 3) bevestigingen.lastElementChild.remove();
-    setTimeout(() => kaart.classList.add('weg'), KAART_DUUR);
-    setTimeout(() => kaart.remove(), KAART_DUUR + 400);
+    bevestigingen.append(kaart);
+    kaartTimers = [
+      setTimeout(() => kaart.classList.add('weg'), KAART_DUUR),
+      setTimeout(() => { kaart.remove(); kaartTimers = []; }, KAART_DUUR + 400)
+    ];
 
     capsule.classList.remove('veer');
     void capsule.offsetWidth; // animatie opnieuw starten
@@ -137,7 +148,7 @@
     if (!GSM.matches || isOpen()) return;
     html.classList.add('lade-open');
     capsule.setAttribute('aria-expanded', 'true');
-    if (bevestigingen) bevestigingen.replaceChildren();
+    wisKaartje();
     if (sluitKnop) sluitKnop.focus({ preventScroll: true });
   }
 
@@ -259,7 +270,7 @@
     // Naar tablet/desktop: lade dicht, de gewone bon staat weer rechts
     if (!GSM.matches) {
       sluitLade();
-      if (bevestigingen) bevestigingen.replaceChildren();
+      wisKaartje();
     }
   }
 

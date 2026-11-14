@@ -1,16 +1,20 @@
+/* Popups van de kassa (Swipedrinks, Afrekenen, Rekeningen, Scan bon, Scan bestelling)
+   in de stijl "Premium clubhuis". Kleuren en lettertypes: zie :root in kassa.css. */
+
 /* Verberg elementen met klasse 'verborgen' */
 .verborgen {
   display: none !important;
 }
 
-/* Donkere overlay over het volledige scherm */
+/* Donkere waas over het volledige scherm */
 .sd-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(21, 21, 21, 0.62);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 12px;
   z-index: 100;
 }
 
@@ -18,89 +22,143 @@
   display: none;
 }
 
-/* Het witte betaalvenster */
+/* Het venster: ivoor kaart met dunne binnenkader */
 .sd-scherm {
-  background: #16213e;
-  border-radius: 16px;
+  background: var(--ivoor, #f8f6f1);
+  color: var(--ink, #151515);
+  border: 1px solid var(--ink, #151515);
+  outline: 1px solid var(--lijn, #d9d4c9);
+  outline-offset: -10px;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
   padding: 36px;
-  width: 420px;
+  width: 440px;
+  max-width: 96vw;
+  max-height: 94vh;
+  overflow-y: auto;
   text-align: center;
-  color: #fff;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
 .sd-scherm h2 {
-  font-size: 1.6rem;
+  font-weight: normal;
+  font-style: italic;
+  font-size: 28px;
+  line-height: 1.15;
   margin-bottom: 4px;
 }
 
+/* Korte lijn onder elke titel, zoals op de kaart */
+.sd-scherm h2::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 1px;
+  background: currentColor;
+  margin: 12px auto 0;
+}
+
 .sd-totaal-label {
-  font-size: 1.1rem;
-  color: #aaa;
+  font-size: 18px;
+  color: var(--grijs, #6d6a64);
+}
+
+.sd-totaal-label strong {
+  color: var(--ink, #151515);
+  font-weight: normal;
+  font-size: 22px;
 }
 
 /* Keuze knoppen (Flow A / Flow B) */
 .sd-keuze-knoppen {
   display: flex;
-  gap: 14px;
+  gap: 10px;
 }
 
 .sd-flow-knop {
   flex: 1;
   padding: 20px 10px;
-  background: #0f3460;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  cursor: pointer;
-  line-height: 1.8;
-  transition: background 0.2s;
+  background: #fff;
+  color: var(--ink, #151515);
+  border: 1px solid var(--lijn, #d9d4c9);
+  font-family: var(--serif, serif);
+  font-size: 19px;
+  line-height: 1.5;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .sd-flow-knop:hover {
-  background: #e94560;
+  border-color: var(--ink, #151515);
+}
+
+.sd-flow-knop:active:not(:disabled) {
+  background: var(--ink, #151515);
+  color: #fff;
 }
 
 .sd-flow-knop small {
   display: block;
-  font-size: 0.78rem;
-  color: #aaa;
+  margin-top: 4px;
+  font-family: var(--sans, sans-serif);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--grijs, #6d6a64);
+}
+
+.sd-flow-knop:active:not(:disabled) small {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sd-flow-knop:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sd-flow-knop:disabled:hover {
+  border-color: var(--lijn, #d9d4c9);
 }
 
 /* Swipedrinks knop op de bon */
 .sd-knop {
-  padding: 14px;
-  background: #7b2fff;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
+  padding: 13px;
+  background: #fff;
+  color: var(--ink, #151515);
+  border: 1px solid var(--ink, #151515);
+  font-family: var(--sans, sans-serif);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: background 0.15s;
 }
 
 .sd-knop:hover {
-  background: #6320d4;
+  background: var(--ivoor2, #efece5);
 }
 
-/* QR afbeelding */
+.sd-knop:active {
+  background: var(--ink, #151515);
+  color: #fff;
+}
+
+/* QR afbeelding: wit met dubbele kader */
 #sd-qr-image {
   display: flex;
   justify-content: center;
-  padding: 16px;
+  padding: 14px;
   background: #fff;
-  border-radius: 10px;
+  border: 1px solid var(--ink, #151515);
+  outline: 1px solid var(--ink, #151515);
+  outline-offset: 4px;
   width: fit-content;
-  margin: 0 auto;
+  margin: 6px auto;
 }
 
 /* Wachttekst met knipperende animatie */
 .sd-wacht {
-  color: #aaa;
+  color: var(--grijs, #6d6a64);
+  font-style: italic;
   animation: knipperen 1.2s infinite;
 }
 
@@ -109,80 +167,110 @@
   50% { opacity: 0.3; }
 }
 
-/* Annuleerknop */
+/* Annuleren / Terug / Sluiten: stille knop */
 .sd-annuleer {
-  padding: 10px;
+  padding: 11px;
   background: transparent;
-  color: #aaa;
-  border: 1px solid #444;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
+  color: var(--grijs, #6d6a64);
+  border: 1px solid var(--lijn, #d9d4c9);
+  font-family: var(--sans, sans-serif);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .sd-annuleer:hover {
-  background: #0f3460;
-  color: #fff;
+  border-color: var(--ink, #151515);
+  color: var(--ink, #151515);
 }
 
-/* Geslaagd scherm: groen */
+/* Geslaagd: wit vlak, inktzwart vinkje in een cirkel */
 .sd-success-scherm {
-  background: #1a4a2e;
-  border-radius: 12px;
-  padding: 40px;
-  color: #4cff82;
+  background: #fff;
+  border: 1px solid var(--ink, #151515);
+  padding: 36px 28px;
+  color: var(--ink, #151515);
 }
 
-/* Mislukt scherm: rood */
+/* Mislukt: wit vlak, rand en icoon in foutkleur (functioneel) */
 .sd-failed-scherm {
-  background: #4a1a1a;
-  border-radius: 12px;
-  padding: 40px;
-  color: #ff4c4c;
+  background: #fff;
+  border: 1px solid var(--fout, #9b2318);
+  padding: 36px 28px;
+  color: var(--ink, #151515);
   display: flex;
   flex-direction: column;
   gap: 12px;
   align-items: center;
 }
 
-/* Groot icoon (✓ of ✗) */
+/* Groot icoon (✓ of ✗) in een cirkel */
 .sd-icoon {
-  font-size: 4rem;
+  width: 88px;
+  height: 88px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+  border-radius: 50%;
+  font-size: 2.8rem;
   line-height: 1;
+}
+
+.sd-failed-scherm .sd-icoon {
+  color: var(--fout, #9b2318);
 }
 
 /* Camera scanner container */
 #sd-camera {
-  border-radius: 10px;
   overflow: hidden;
-}
-
-.sd-flow-knop:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.sd-flow-knop:disabled:hover {
-  background: #0f3460;
+  border: 1px solid var(--ink, #151515);
 }
 
 #sd-keuze-status.sd-fout {
-  color: #ff4c4c;
+  color: var(--fout, #9b2318);
+  font-style: normal;
   animation: none;
 }
 
+/* Opnieuw proberen: omlijnd in inkt */
 .sd-opnieuw {
-  padding: 10px 16px;
-  background: #0f3460;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s;
+  padding: 11px 16px;
+  background: #fff;
+  color: var(--ink, #151515);
+  border: 1px solid var(--ink, #151515);
+  font-family: var(--sans, sans-serif);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: background 0.15s;
 }
 
 .sd-opnieuw:hover {
-  background: #e94560;
+  background: var(--ivoor2, #efece5);
+}
+
+.sd-opnieuw:active {
+  background: var(--ink, #151515);
+  color: #fff;
+}
+
+/* Smalle schermen: minder witruimte in de popups */
+@media (max-width: 480px) {
+  .sd-scherm {
+    padding: 26px 18px;
+    outline-offset: -7px;
+    gap: 16px;
+  }
+
+  .sd-scherm h2 {
+    font-size: 24px;
+  }
+
+  .sd-keuze-knoppen {
+    flex-direction: column;
+  }
 }

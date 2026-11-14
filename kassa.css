@@ -1,3 +1,19 @@
+/* Kassa — stijl "Premium clubhuis" (KVC De Toekomst Borsbeke).
+   Zwart-wit: inktzwart, ivoor, dunne lijnen; serif voor titels en tekst,
+   sans in hoofdletters voor labels. Geen extra merkkleuren. */
+:root {
+  --ink: #151515;
+  --ivoor: #f8f6f1;
+  --ivoor2: #efece5;
+  --lijn: #d9d4c9;
+  --grijs: #6d6a64;
+  --stip: #9a958b;
+  /* Alleen voor foutmeldingen (functioneel, geen merkkleur) */
+  --fout: #9b2318;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --sans: "Gill Sans", "Gill Sans MT", "Seravek", "Avenir Next", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -5,61 +21,198 @@
 }
 
 body {
-  font-family: sans-serif;
-  background: #1a1a2e;
-  color: #fff;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-family: var(--serif);
+  background: var(--ivoor);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
 }
 
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Label in kleine hoofdletters */
+.sc {
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* --- Indeling: zijbalk | de kaart | bon --- */
 .kassa {
-  display: flex;
-  gap: 20px;
-  width: 900px;
-  height: 600px;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-areas: "zij kaart bon";
+  height: 100vh;
+  height: 100dvh;
 }
 
-/* --- Linkerkant --- */
-.producten {
-  flex: 2;
-  background: #16213e;
-  border-radius: 12px;
-  padding: 20px;
+/* --- Zijbalk --- */
+.zijbalk {
+  grid-area: zij;
+  background: var(--ink);
+  color: #fff;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  min-height: 0;
+  padding: 22px 16px 16px;
 }
 
-/* Tabs: één rij, horizontaal schuiven als ze niet passen */
+.wapen-blok {
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Ingekaderd clubwapen: dubbele kader, licht afgeplatte cirkel */
+.wapen {
+  display: inline-block;
+  background: var(--ivoor);
+  padding: 6px;
+  border: 1px solid #fff;
+  outline: 1px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 4px;
+  border-radius: 50% 50% 46% 46% / 40% 40% 60% 60%;
+}
+
+.wapen img {
+  display: block;
+  width: 72px;
+  height: auto;
+}
+
+.clubnaam strong {
+  display: block;
+  font-weight: normal;
+  font-size: 17px;
+  line-height: 1.2;
+  margin-top: 14px;
+}
+
+.clubnaam .sc {
+  display: block;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+/* Tabs: verticale lijst in de zijbalk */
 .tabs {
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  flex-shrink: 0;
+  flex-direction: column;
+  margin: 14px 0;
+  min-height: 0;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
 .tab {
-  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 6px;
+  background: none;
+  border: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: var(--serif);
+  font-size: 16px;
+  text-align: left;
   white-space: nowrap;
-  padding: 12px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #0f3460;
-  color: #aaa;
-  font-size: 1rem;
-  cursor: pointer;
+}
+
+.tab::before {
+  content: "";
+  flex: none;
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.4;
+  transition: width 0.2s;
+}
+
+.tab:hover {
+  color: #fff;
 }
 
 .tab.actief {
-  background: #e94560;
   color: #fff;
-  font-weight: bold;
+  font-style: italic;
 }
 
-/* Productknoppen: compact raster dat binnen het vak scrollt */
+.tab.actief::before {
+  width: 26px;
+  opacity: 1;
+}
+
+.dash-link {
+  margin-top: auto;
+  display: block;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  text-decoration: none;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dash-link:hover {
+  border-color: #fff;
+}
+
+/* --- Midden: de kaart --- */
+.producten {
+  grid-area: kaart;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  padding: 22px 26px;
+}
+
+.kaart-kop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+}
+
+.kaart-kop h2 {
+  font-weight: normal;
+  font-style: italic;
+  font-size: 28px;
+}
+
+.kaart-kop .sc {
+  color: var(--grijs);
+  text-align: right;
+}
+
+/* Productknoppen: menukaart-rijen die binnen het vak scrollen */
 .knoppen-vak {
   flex: 1;
   min-height: 0;
@@ -69,194 +222,202 @@ body {
 
 .categorie {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  column-gap: 26px;
+  align-content: start;
 }
 
 .categorie.verborgen {
   display: none;
 }
 
+/* Knop = "naam ........ prijs". kassa.js zet: naam, <br>, <span class="knop-prijs"> */
 .item-knop {
-  min-height: 64px;
-  padding: 8px 6px;
-  background: #0f3460;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  line-height: 1.3;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 56px;
+  padding: 14px 6px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--lijn);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.25;
+  text-align: left;
   overflow-wrap: anywhere;
-  touch-action: manipulation;
+  transition: background 0.15s;
+}
+
+.item-knop br {
+  display: none;
+}
+
+/* Stippellijn tussen naam en prijs */
+.item-knop::after {
+  content: "";
+  order: 1;
+  flex: 1 1 16px;
+  min-width: 16px;
+  border-bottom: 1px dotted var(--stip);
+  transform: translateY(-4px);
+}
+
+.knop-prijs {
+  order: 2;
+  flex: none;
+  white-space: nowrap;
+  font-variant-numeric: oldstyle-nums tabular-nums;
 }
 
 .item-knop:hover {
-  background: #e94560;
+  background: var(--ivoor2);
+}
+
+.item-knop:active {
+  background: var(--ink);
+  color: #fff;
 }
 
 /* Nog geen prijs: knop vraagt de prijs bij de eerste tik */
 .item-knop.zonder-prijs .knop-prijs {
-  color: #ffb84c;
+  color: var(--grijs);
   font-style: italic;
 }
 
-/* Scan bon: opvallend, zelfde grootte als Afrekenen/Swipedrinks */
-.scan-knop {
-  padding: 14px;
-  background: #0d9488;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
+.item-knop.zonder-prijs:active .knop-prijs {
+  color: inherit;
 }
 
-.scan-knop:hover {
-  background: #0b7a70;
-}
-
-/* Scan bon en Scan bestelling naast elkaar */
-.bon-rij .scan-knop {
-  flex: 1;
-  padding: 14px 6px;
-}
-
-/* Scan bestelling (QR uit de klanten-bestelapp) */
-.bestel-scan-knop {
-  background: #2563eb;
-}
-
-.bestel-scan-knop:hover {
-  background: #1d4ed8;
-}
-
-#kb-camera {
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-/* --- Gsm: alles onder elkaar, volle breedte --- */
-@media (max-width: 700px) {
-  body {
-    height: auto;
-    display: block;
-  }
-
-  .kassa {
-    flex-direction: column;
-    width: 100%;
-    height: auto;
-    gap: 10px;
-    padding: 8px;
-  }
-
-  .producten {
-    height: 62vh;
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .bon {
-    padding: 12px;
-  }
-
-  #bon-lijst {
-    max-height: 30vh;
-  }
-}
-
-/* --- Rechterkant --- */
+/* --- Rechterkant: bon --- */
 .bon {
-  flex: 1;
-  background: #16213e;
-  border-radius: 12px;
-  padding: 20px;
+  grid-area: bon;
+  background: #fff;
+  border-left: 1px solid var(--lijn);
+  box-shadow: -10px 0 30px -20px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 22px 18px;
 }
 
 .bon h2 {
-  font-size: 1.4rem;
-  border-bottom: 1px solid #0f3460;
+  font-weight: normal;
+  font-style: italic;
+  font-size: 26px;
+  text-align: center;
   padding-bottom: 10px;
+  border-bottom: 3px double var(--ink);
+}
+
+/* Geladen rekening (tekst "Rekening: naam" uit kassa.js) */
+.rekening-label {
+  text-align: center;
+  font-style: italic;
+  font-size: 19px;
+  padding: 8px 10px;
+  border: 1px solid var(--ink);
+  outline: 1px solid var(--ink);
+  outline-offset: -5px;
 }
 
 #bon-lijst {
   flex: 1;
+  min-height: 60px;
   list-style: none;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+}
+
+#bon-lijst:empty::before {
+  content: "Nog niets op de bon";
+  color: var(--grijs);
+  font-style: italic;
+  padding: 16px 0;
 }
 
 #bon-lijst li {
   display: flex;
   justify-content: space-between;
-  background: #0f3460;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ivoor2);
+  font-size: 16px;
+}
+
+#bon-lijst li span:last-child {
+  flex: none;
+  font-variant-numeric: oldstyle-nums tabular-nums;
 }
 
 .totaal {
-  font-size: 1.3rem;
-  font-weight: bold;
-  text-align: right;
-  border-top: 1px solid #0f3460;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top: 1px solid var(--ink);
   padding-top: 10px;
 }
 
+.totaal .sc {
+  color: var(--grijs);
+}
+
+#totaal {
+  font-size: 38px;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+/* Afrekenen: de hoofdknop, inktzwart met dubbele rand */
 .afrekenen-knop {
-  padding: 14px;
-  background: #e94560;
+  margin: 4px 4px;
+  padding: 16px;
+  background: var(--ink);
   color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
+  border: 0;
+  outline: 1px solid var(--ink);
+  outline-offset: 3px;
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  transition: background 0.15s;
 }
 
 .afrekenen-knop:hover {
-  background: #c73652;
+  background: #000;
 }
 
-.wis-knop {
-  padding: 10px;
-  background: #0f3460;
-  color: #aaa;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
+.afrekenen-knop:active {
+  background: #3a3833;
 }
 
-.wis-knop:hover {
-  background: #1a3a6e;
+/* Scan bon en Scan bestelling */
+.scan-knop {
+  padding: 13px 8px;
+  background: var(--ivoor);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+
+.scan-knop:hover {
+  background: var(--ivoor2);
+}
+
+.scan-knop:active {
+  background: var(--ink);
   color: #fff;
-}
-
-/* --- Rekeningen en afrekenen --- */
-.dash-link {
-  float: right;
-  font-size: 0.85rem;
-  font-weight: normal;
-  color: #aaa;
-}
-
-.rekening-label {
-  background: #7b2fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: bold;
 }
 
 .bon-rij {
@@ -264,21 +425,61 @@ body {
   gap: 8px;
 }
 
+.bon-rij .scan-knop {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Scan bestelling (QR uit de klanten-bestelapp) */
+.bestel-scan-knop {
+  background: #fff;
+}
+
+#kb-camera {
+  overflow: hidden;
+  border: 1px solid var(--ink);
+}
+
 .rek-knop {
   flex: 1;
+  min-width: 0;
   padding: 12px 6px;
-  background: #0f3460;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  cursor: pointer;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--lijn);
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .rek-knop:hover {
-  background: #1a3a6e;
+  border-color: var(--ink);
 }
 
+.rek-knop:active {
+  background: var(--ivoor2);
+}
+
+.wis-knop {
+  padding: 8px;
+  background: none;
+  color: var(--grijs);
+  border: 0;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.wis-knop:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* --- Afrekenen en rekeningen (popup) --- */
 .bet-stap {
   display: flex;
   flex-direction: column;
@@ -288,48 +489,63 @@ body {
 .bet-knoppen {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .bet-knop {
   padding: 24px 10px;
-  background: #0f3460;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--lijn);
+  font-family: var(--serif);
+  font-size: 21px;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .bet-knop:hover {
-  background: #e94560;
+  border-color: var(--ink);
 }
 
-.bet-knop.bet-sd {
-  background: #7b2fff;
-}
-
-.bet-input {
-  padding: 14px;
-  font-size: 1.2rem;
-  border-radius: 8px;
-  border: 1px solid #444;
-  background: #0f3460;
+.bet-knop:active {
+  background: var(--ink);
   color: #fff;
 }
 
-.bet-groot {
-  font-size: 1.4rem;
-  font-weight: bold;
+.bet-knop.bet-sd {
+  font-style: italic;
+  border-color: var(--ink);
 }
 
-.qr-vak {
-  padding: 16px;
+.bet-input {
+  width: 100%;
+  padding: 14px;
+  font-family: var(--serif);
+  font-size: 20px;
+  border: 1px solid var(--lijn);
+  border-bottom-color: var(--ink);
+  border-radius: 0;
   background: #fff;
-  border-radius: 10px;
+  color: var(--ink);
+}
+
+.bet-input::placeholder {
+  color: var(--stip);
+  font-style: italic;
+}
+
+.bet-groot {
+  font-size: 26px;
+}
+
+/* QR-vak (Bancontact): wit met dubbele kader */
+.qr-vak {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--ink);
+  outline: 1px solid var(--ink);
+  outline-offset: 4px;
   width: fit-content;
-  margin: 0 auto;
+  margin: 6px auto;
 }
 
 .rek-lijst {
@@ -340,20 +556,38 @@ body {
   overflow-y: auto;
 }
 
+.rek-lijst .rek-knop {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 16px;
+  font-family: var(--serif);
+  font-size: 18px;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+}
+
+.rek-lijst .rek-knop span:first-child {
+  font-style: italic;
+}
+
 /* --- Bonscanner --- */
-.bs-scherm {
-  width: 540px;
+.sd-scherm.bs-scherm {
+  width: 560px;
   max-width: 96vw;
   max-height: 94vh;
   overflow-y: auto;
-  padding: 24px;
+  padding: 28px 24px;
 }
 
 .bs-video {
   width: 100%;
   max-height: 45vh;
   background: #000;
-  border-radius: 10px;
+  border: 1px solid var(--ink);
   object-fit: contain;
 }
 
@@ -367,21 +601,47 @@ body {
   display: flex;
   flex-direction: column;
   padding: 8px;
-  border-radius: 8px;
-  background: #0f3460;
-  font-size: 0.9rem;
+  background: #fff;
+  border: 1px solid var(--lijn);
+  font-size: 15px;
 }
 
-.bs-zone small { color: #aaa; }
-.bs-zone[data-stand="bezig"] { background: #7a5a00; }
-.bs-zone[data-stand="gelezen"] { background: #1a4a2e; }
-.bs-zone[data-stand="gelezen"] small { color: #4cff82; }
+.bs-zone small {
+  color: var(--grijs);
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
 
-.bs-fout { color: #ff4c4c; }
+.bs-zone[data-stand="bezig"] {
+  background: var(--ivoor2);
+  border: 1px dashed var(--ink);
+}
+
+.bs-zone[data-stand="gelezen"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.bs-zone[data-stand="gelezen"] small {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bs-fout {
+  color: var(--fout);
+}
 
 .bs-link {
-  color: #aaa;
-  font-size: 0.9rem;
+  color: var(--grijs);
+  font-size: 15px;
+  font-style: italic;
+  text-underline-offset: 3px;
+}
+
+.bs-link:hover {
+  color: var(--ink);
 }
 
 .bs-regels {
@@ -393,32 +653,54 @@ body {
 }
 
 .bs-regel {
-  background: #0f3460;
-  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--lijn);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.bs-regel.bs-onzeker { outline: 2px solid #c17800; }
-.bs-regel.bs-nul { opacity: 0.55; }
+/* Onzeker gelezen: duidelijke streepjesrand */
+.bs-regel.bs-onzeker {
+  border: 2px dashed var(--ink);
+}
+
+.bs-regel.bs-nul {
+  opacity: 0.55;
+}
 
 .bs-regel-kop {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 8px;
-  font-weight: bold;
+  font-size: 17px;
 }
 
-.bs-prijs { color: #aaa; font-weight: normal; }
-.bs-niet-in-kassa { color: #ffb84c; font-weight: bold; }
-.bs-reden { color: #ffb84c; }
+.bs-prijs {
+  color: var(--grijs);
+  font-style: italic;
+}
+
+.bs-niet-in-kassa {
+  color: var(--fout);
+  font-style: normal;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bs-reden {
+  color: var(--fout);
+  font-style: italic;
+}
 
 .bs-crop {
   max-width: 100%;
   background: #fff;
-  border-radius: 4px;
+  border: 1px solid var(--lijn);
 }
 
 .bs-keuzes {
@@ -427,20 +709,45 @@ body {
   gap: 4px;
 }
 
-.bs-keuze, .bs-stap {
+.bs-keuze,
+.bs-stap {
   padding: 10px 0;
-  background: #1a3a6e;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--lijn);
+  font-family: var(--serif);
+  font-size: 17px;
 }
 
-.bs-keuze.bs-hint { border: 2px solid #ffb84c; }
-.bs-keuze:hover, .bs-stap:hover:not(:disabled) { background: #e94560; }
-.bs-stap { width: 44px; }
-.bs-stap:disabled { opacity: 0.4; cursor: not-allowed; }
+.bs-keuze.bs-hint {
+  border: 2px solid var(--ink);
+  font-weight: bold;
+}
+
+.bs-keuze:hover,
+.bs-stap:hover:not(:disabled) {
+  background: var(--ivoor2);
+  border-color: var(--ink);
+}
+
+.bs-keuze:active,
+.bs-stap:active:not(:disabled) {
+  background: var(--ink);
+  color: #fff;
+}
+
+.bs-stap {
+  width: 44px;
+  border-radius: 50%;
+  height: 44px;
+  padding: 0;
+  line-height: 1;
+}
+
+.bs-stap:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .bs-stepper {
   display: flex;
@@ -451,8 +758,8 @@ body {
 .bs-aantal {
   min-width: 2em;
   text-align: center;
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-family: var(--sans);
+  font-size: 18px;
 }
 
 .bs-prijsveld {
@@ -464,23 +771,179 @@ body {
   flex: 1;
   min-width: 0;
   padding: 10px;
-  font-size: 1rem;
+  font-size: 17px;
 }
 
-.bs-prijs-input.bs-ongeldig { border-color: #ff4c4c; }
-.bs-overslaan { flex: 0 0 auto; padding: 10px 12px; }
-.bs-overslaan.bs-aan { background: #e94560; }
+.bs-prijs-input.bs-ongeldig {
+  border-color: var(--fout);
+  border-bottom-color: var(--fout);
+}
 
-.bs-leeg { color: #aaa; text-align: center; }
+.bs-overslaan {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+}
+
+.bs-overslaan.bs-aan {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.bs-leeg {
+  color: var(--grijs);
+  font-style: italic;
+  text-align: center;
+}
 
 #bs-zet:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.rek-lijst .rek-knop {
-  display: flex;
-  justify-content: space-between;
-  padding: 16px;
-  font-size: 1.1rem;
+/* --- Breed tablet in staande stand / kleine laptop: zijbalk wordt een kopbalk --- */
+@media (max-width: 1100px) {
+  .kassa {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "zij zij"
+      "kaart bon";
+  }
+
+  .zijbalk {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    padding: 10px 16px;
+  }
+
+  .wapen-blok {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: none;
+    text-align: left;
+    padding: 0 18px 0 0;
+    border-bottom: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .wapen {
+    padding: 4px;
+    outline-offset: 3px;
+  }
+
+  .wapen img {
+    width: 40px;
+  }
+
+  .clubnaam strong {
+    margin-top: 0;
+    font-size: 15px;
+  }
+
+  .tabs {
+    flex-direction: row;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 6px;
+  }
+
+  .clubnaam {
+    max-width: 150px;
+  }
+
+  /* Horizontale tabs: actieve tab onderstreept in plaats van met een streep ervoor */
+  .tab {
+    flex: none;
+    padding: 8px 9px;
+    border-bottom: 1px solid transparent;
+  }
+
+  .tab::before {
+    display: none;
+  }
+
+  .tab.actief {
+    border-bottom-color: #fff;
+  }
+
+  .dash-link {
+    margin-top: 0;
+    flex: none;
+  }
+
+  .producten {
+    padding: 16px 18px;
+  }
+}
+
+/* --- Gsm: alles onder elkaar, volle breedte --- */
+@media (max-width: 700px) {
+  .kassa {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .zijbalk {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 12px;
+  }
+
+  .wapen-blok {
+    flex: 1;
+    border-right: 0;
+    padding: 0;
+  }
+
+  .clubnaam {
+    max-width: none;
+  }
+
+  .clubnaam strong {
+    font-size: 14px;
+  }
+
+  .tabs {
+    order: 3;
+    flex: 1 0 100%;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    padding-top: 4px;
+  }
+
+  .dash-link {
+    padding: 8px;
+    font-size: 10px;
+  }
+
+  .producten {
+    height: 62vh;
+    padding: 10px 12px;
+  }
+
+  .kaart-kop h2 {
+    font-size: 22px;
+  }
+
+  .bon {
+    border-left: 0;
+    border-top: 3px double var(--ink);
+    box-shadow: none;
+    padding: 14px 12px 18px;
+  }
+
+  #bon-lijst {
+    flex: none;
+    max-height: 30vh;
+  }
+
+  #totaal {
+    font-size: 30px;
+  }
 }

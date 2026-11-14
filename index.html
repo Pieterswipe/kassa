@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kassa</title>
+  <meta name="theme-color" content="#151515">
+  <title>Kassa · KVC De Toekomst Borsbeke</title>
+  <link rel="icon" href="assets/clublogo.png">
   <link rel="stylesheet" href="kassa.css">
   <link rel="stylesheet" href="swipedrinks.css">
 </head>
@@ -11,21 +13,37 @@
 
   <div class="kassa">
 
-    <!-- Linkerkant: producten -->
-    <div class="producten">
+    <!-- Zijbalk: clubwapen, categorie-tabs en dashboard -->
+    <aside class="zijbalk">
+      <div class="wapen-blok">
+        <span class="wapen"><img src="assets/clublogo.png" alt="Clublogo KVC De Toekomst Borsbeke"></span>
+        <div class="clubnaam">
+          <strong>KVC De Toekomst Borsbeke</strong>
+          <span class="sc">Kantine · Kassa</span>
+        </div>
+      </div>
       <!-- Tabs en productknoppen worden opgebouwd uit producten.js (bouwProductKnoppen in kassa.js).
            Knop met vaste prijs: voegToe(naam, prijs). Knop zonder prijs: voegToeVraagPrijs(naam)
            vraagt één keer de prijs en onthoudt die (prijzen.js). -->
-      <div id="tabs" class="tabs"></div>
+      <nav id="tabs" class="tabs"></nav>
+      <a href="dashboard.html" class="dash-link">Dashboard</a>
+    </aside>
+
+    <!-- Midden: producten als "De kaart" -->
+    <div class="producten">
+      <div class="kaart-kop">
+        <h2>De kaart</h2>
+        <span class="sc">Kantine De Vrede</span>
+      </div>
       <div id="knoppen-vak" class="knoppen-vak"></div>
     </div>
 
     <!-- Rechterkant: bon -->
     <div class="bon">
-      <h2>Bon <a href="dashboard.html" class="dash-link">Dashboard</a></h2>
+      <h2>Bon</h2>
       <div id="rekening-label" class="rekening-label verborgen"></div>
       <ul id="bon-lijst"></ul>
-      <div class="totaal">Totaal: <span id="totaal">€0,00</span></div>
+      <div class="totaal"><span class="sc">Totaal</span> <span id="totaal">€0,00</span></div>
       <button class="afrekenen-knop" onclick="afrekenen()">Afrekenen</button>
       <button class="sd-knop" onclick="openSwipedrinks()">Swipedrinks</button>
       <div class="bon-rij">

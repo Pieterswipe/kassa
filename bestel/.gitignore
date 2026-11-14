@@ -1,3 +1,5 @@
 # Kopieën uit de root (zie netlify.toml), niet dubbel in git
 producten.js
 bestelcode.js
+# Clublogo: bij het bouwen gekopieerd uit ../assets/clublogo.png (zie netlify.toml)
+assets/clublogo.png

@@ -1,4 +1,19 @@
-/* Klanten-bestelapp: gsm-eerst, grote tikvlakken. Kleuren zoals de kassa. */
+/* Klanten-bestelapp — stijl "Premium clubhuis" (KVC De Toekomst Borsbeke).
+   Gsm-eerst, grote tikvlakken. Zwart-wit zoals de kassa: inkt, ivoor, dunne lijnen. */
+:root {
+  --ink: #151515;
+  --ivoor: #f8f6f1;
+  --ivoor2: #efece5;
+  --lijn: #d9d4c9;
+  --grijs: #6d6a64;
+  --stip: #9a958b;
+  --tekst2: #3a3833;
+  /* Alleen voor foutmeldingen (functioneel, geen merkkleur) */
+  --fout: #9b2318;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --sans: "Gill Sans", "Gill Sans MT", "Seravek", "Avenir Next", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,20 +21,76 @@
 }
 
 body {
-  font-family: sans-serif;
-  background: #1a1a2e;
-  color: #fff;
+  font-family: var(--serif);
+  background: var(--ivoor);
+  color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
 
 button {
   font: inherit;
+  color: inherit;
   touch-action: manipulation;
   cursor: pointer;
 }
 
+button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .verborgen {
   display: none !important;
+}
+
+/* Label in kleine hoofdletters */
+.sc {
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 10px;
+  font-weight: normal;
+  color: var(--grijs);
+}
+
+/* --- Welkom met ingekaderd clubwapen --- */
+.welkom {
+  text-align: center;
+  padding: calc(28px + env(safe-area-inset-top)) 24px 10px;
+}
+
+.wapen {
+  display: inline-block;
+  background: #fff;
+  padding: 6px;
+  border: 1px solid var(--ink);
+  outline: 1px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 50% 50% 46% 46% / 40% 40% 60% 60%;
+}
+
+.wapen img {
+  display: block;
+  width: 62px;
+  height: auto;
+}
+
+.welkom .sc {
+  display: block;
+  margin-top: 14px;
+}
+
+.welkom h1 {
+  font-weight: normal;
+  font-style: italic;
+  font-size: 30px;
+  margin: 2px 0 4px;
+}
+
+.welkom p {
+  color: var(--tekst2);
+  font-size: 15px;
+  line-height: 1.4;
 }
 
 /* --- Kop met categorie-tabs (blijft bovenaan) --- */
@@ -27,123 +98,166 @@ button {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #16213e;
-  padding: 12px 12px 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-.kop h1 {
-  font-size: 1.4rem;
-}
-
-.kop p {
-  color: #aaa;
-  font-size: 0.9rem;
-  margin: 2px 0 8px;
+  background: var(--ivoor);
+  border-bottom: 1px solid var(--lijn);
 }
 
 .tabs {
   display: flex;
-  gap: 8px;
+  gap: 18px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 10px 24px 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
 .tab {
   flex: 0 0 auto;
   white-space: nowrap;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #0f3460;
-  color: #fff;
-  font-size: 0.95rem;
+  min-height: 44px;
+  padding: 6px 0 10px;
+  margin-bottom: -1px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--grijs);
+  font-family: var(--serif);
+  font-size: 16px;
 }
 
-/* --- Productlijst --- */
+.tab:hover,
+.tab:active {
+  color: var(--ink);
+  font-style: italic;
+  border-bottom-color: var(--ink);
+}
+
+/* --- Productlijst: de kaart --- */
 .lijst {
   max-width: 640px;
   margin: 0 auto;
-  padding: 8px 10px 120px; /* ruimte voor de voet */
+  padding: 4px 24px 150px; /* ruimte voor de voet */
 }
 
 .sectie h2 {
-  font-size: 1.1rem;
-  color: #e94560;
-  margin: 18px 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 26px 0 4px;
+  font-weight: normal;
+  font-style: italic;
+  font-size: 22px;
+}
+
+.sectie h2::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--ink);
 }
 
 .rij {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #16213e;
-  border-radius: 10px;
-  padding: 8px 8px 8px 12px;
-  margin-bottom: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ivoor2);
 }
 
-.rij.gekozen {
-  background: #0f3460;
-  outline: 2px solid #e94560;
-}
-
+/* Naam ........ prijs */
 .info {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+}
+
+.info::after {
+  content: "";
+  order: 1;
+  flex: 1 1 12px;
+  min-width: 12px;
+  border-bottom: 1px dotted var(--stip);
+  transform: translateY(-4px);
 }
 
 .naam {
-  font-size: 1.05rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 17px;
   overflow-wrap: anywhere;
 }
 
 .prijs {
-  color: #aaa;
-  font-size: 0.9rem;
+  order: 2;
+  flex: none;
+  font-size: 16px;
+  font-variant-numeric: oldstyle-nums tabular-nums;
 }
 
+/* Zonder vaste prijs: tekst op een eigen regel, zonder stippellijn */
 .prijs-kassa {
-  color: #ffb84c;
+  order: 3;
+  flex-basis: 100%;
+  color: var(--grijs);
+  font-style: italic;
+  font-size: 14px;
+}
+
+.info:has(.prijs-kassa)::after {
+  display: none;
+}
+
+.rij.gekozen .naam {
   font-style: italic;
 }
 
+/* Ronde +/- knoppen */
 .stap {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
-  border: none;
-  border-radius: 10px;
-  background: #0f3460;
-  color: #fff;
-  font-size: 1.8rem;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  font-size: 1.4rem;
   line-height: 1;
 }
 
-.rij.gekozen .stap {
-  background: #1a4a8e;
-}
-
 .stap.plus {
-  background: #e94560;
+  background: var(--ink);
+  color: #fff;
 }
 
-.rij.gekozen .stap.plus {
-  background: #e94560;
+.stap:active:not(:disabled) {
+  background: var(--ivoor2);
+  color: var(--ink);
 }
 
 .stap:disabled {
-  opacity: 0.35;
+  opacity: 0.25;
   cursor: default;
 }
 
 .aantal {
   min-width: 2ch;
   text-align: center;
-  font-size: 1.3rem;
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--grijs);
+}
+
+.rij.gekozen .aantal {
+  color: var(--ink);
   font-weight: bold;
 }
 
@@ -155,41 +269,64 @@ button {
   bottom: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-  background: #16213e;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4);
+  gap: 14px;
+  padding: 12px 18px calc(14px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 3px double var(--ink);
+  box-shadow: 0 -10px 30px -20px rgba(0, 0, 0, 0.25);
 }
 
 .voet-tekst {
   flex: 1;
   min-width: 0;
-  font-size: 1.15rem;
+}
+
+.voet-tekst > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.voet-tekst strong {
+  font-weight: normal;
+  font-size: 28px;
+  line-height: 1.1;
 }
 
 .voet-tekst small {
   display: block;
-  color: #aaa;
-  font-size: 0.8rem;
+  color: var(--grijs);
+  font-style: italic;
+  font-size: 13px;
 }
 
+/* Maak QR-code: inktzwart met dubbele rand */
 .hoofd-knop {
+  flex: none;
   padding: 16px 18px;
-  border: none;
-  border-radius: 10px;
-  background: #e94560;
+  margin: 4px;
+  border: 0;
+  outline: 1px solid var(--ink);
+  outline-offset: 3px;
+  background: var(--ink);
   color: #fff;
-  font-size: 1.1rem;
-  font-weight: bold;
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hoofd-knop:active:not(:disabled) {
+  background: #3a3833;
 }
 
 .hoofd-knop:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
 .fout {
-  color: #ff4c4c;
+  color: var(--fout);
   padding: 20px;
   text-align: center;
 }
@@ -201,18 +338,25 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
+  padding: calc(24px + env(safe-area-inset-top)) 10px calc(20px + env(safe-area-inset-bottom));
   text-align: center;
 }
 
 .qr-scherm h2 {
-  font-size: 1.3rem;
+  font-weight: normal;
+  font-style: italic;
+  font-size: 26px;
+  line-height: 1.15;
+  padding: 0 14px;
 }
 
+/* QR in een wit kaartje met dubbele kader (binnenlijn via inset-schaduw, zodat de
+   breedte niet groeit; 14px wit rond de QR als rustzone voor de scanner) */
 .qr-code {
   background: #fff;
   padding: 14px;
-  border-radius: 12px;
+  border: 1px solid var(--ink);
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px var(--ink);
 }
 
 .qr-code img,
@@ -221,50 +365,80 @@ button {
 }
 
 .qr-code .fout {
-  color: #c00;
+  color: var(--fout);
 }
 
 .qr-samenvatting {
   width: 100%;
   max-width: 420px;
+  padding: 0 14px;
   text-align: left;
-  background: #16213e;
-  border-radius: 10px;
-  padding: 12px 16px;
+  font-size: 16px;
 }
 
 .qr-samenvatting ul {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+}
+
+.qr-samenvatting li {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--lijn);
 }
 
 .qr-totaal {
-  margin-top: 8px;
-  font-weight: bold;
-  border-top: 1px solid #0f3460;
-  padding-top: 8px;
+  padding: 10px 0 4px;
+  font-size: 22px;
+  border-top: 1px solid var(--ink);
+  margin-top: -1px;
 }
 
 .qr-knoppen {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   width: 100%;
   max-width: 420px;
+  padding: 0 14px;
 }
 
 .knop {
-  flex: 1;
-  padding: 16px 8px;
-  border: none;
-  border-radius: 10px;
-  background: #e94560;
+  min-height: 48px;
+  padding: 14px 6px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
   color: #fff;
-  font-size: 1.05rem;
-  font-weight: bold;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .knop-licht {
-  background: #0f3460;
+  background: none;
+  color: var(--ink);
+}
+
+.knop:active {
+  opacity: 0.8;
+}
+
+/* Heel smalle gsm: knop iets compacter */
+@media (max-width: 360px) {
+  .lijst {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .voet {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .hoofd-knop {
+    padding: 14px 12px;
+    letter-spacing: 0.1em;
+    font-size: 13px;
+  }
 }

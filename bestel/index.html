@@ -3,17 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1a1a2e">
-  <title>Bestellen – toon de QR aan de kassa</title>
+  <meta name="theme-color" content="#f8f6f1">
+  <title>Bestellen – toon de QR aan de kassa · KVC De Toekomst Borsbeke</title>
+  <!-- assets/clublogo.png wordt bij het bouwen uit ../assets/ gekopieerd (netlify.toml) -->
+  <link rel="icon" href="assets/clublogo.png">
   <link rel="stylesheet" href="bestel.css">
 </head>
 <body>
 
   <!-- Bestellen -->
   <div id="bestel-scherm">
-    <header class="kop">
+    <!-- Welkom met clubwapen (scrolt mee weg) -->
+    <div class="welkom">
+      <span class="wapen"><img src="assets/clublogo.png" alt="Clublogo KVC De Toekomst Borsbeke"></span>
+      <span class="sc">KVC De Toekomst Borsbeke · Kantine</span>
       <h1>Bestellen</h1>
       <p>Kies je artikelen en toon de QR aan de kassa.</p>
+    </div>
+
+    <!-- Kop met categorie-tabs (blijft bovenaan; bestel.js gebruikt de hoogte van .kop) -->
+    <header class="kop">
       <nav id="tabs" class="tabs"></nav>
     </header>
 
@@ -21,7 +30,7 @@
 
     <footer class="voet">
       <div class="voet-tekst">
-        <div>Totaal: <strong id="totaal">€0,00</strong></div>
+        <div><span class="sc">Totaal</span> <strong id="totaal">€0,00</strong></div>
         <small id="totaal-extra"></small>
       </div>
       <button id="maak-qr" class="hoofd-knop" disabled>Maak QR-code</button>
@@ -30,6 +39,7 @@
 
   <!-- QR fullscreen -->
   <div id="qr-scherm" class="qr-scherm verborgen">
+    <span class="sc">KVC De Toekomst Borsbeke · Uw bestelling</span>
     <h2>Toon deze QR aan de kassa</h2>
     <div id="qr-code" class="qr-code"></div>
     <div id="qr-samenvatting" class="qr-samenvatting"></div>

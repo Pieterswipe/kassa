@@ -3,31 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <meta name="theme-color" content="#f8f6f1">
+  <title>Dashboard · KVC De Toekomst Borsbeke</title>
+  <link rel="icon" href="assets/clublogo.png">
   <style>
+    /* Stijl "Premium clubhuis": zwart-wit, serif, dunne lijnen (zoals kassa.css) */
+    :root {
+      --ink: #151515; --ivoor: #f8f6f1; --ivoor2: #efece5; --lijn: #d9d4c9; --grijs: #6d6a64;
+      --fout: #9b2318; /* alleen foutmeldingen */
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+      --sans: "Gill Sans", "Gill Sans MT", "Seravek", "Avenir Next", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
     * { box-sizing: border-box; }
-    body { font-family: sans-serif; background: #1a1a2e; color: #fff; margin: 0; padding: 20px; }
-    main { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-    header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-    header h1 { flex: 1; margin: 0; }
-    a { color: #aaa; }
-    input { padding: 10px; font-size: 1.1rem; border-radius: 8px; border: 1px solid #444; background: #0f3460; color: #fff; }
-    section { background: #16213e; border-radius: 12px; padding: 20px; }
-    h2 { margin: 0 0 12px; font-size: 1.2rem; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #0f3460; }
+    body { font-family: var(--serif); background: var(--ivoor); color: var(--ink); margin: 0; padding: 28px 20px 48px; }
+    main { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+    .sc { font-family: var(--sans); text-transform: uppercase; letter-spacing: 0.22em; font-size: 11px; color: var(--grijs); }
+
+    header { text-align: center; padding-bottom: 18px; border-bottom: 3px double var(--ink); }
+    .wapen { display: inline-block; background: #fff; padding: 6px; border: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 4px;
+             border-radius: 50% 50% 46% 46% / 40% 40% 60% 60%; }
+    .wapen img { display: block; width: 64px; height: auto; }
+    header .sc { display: block; margin-top: 16px; }
+    header h1 { margin: 4px 0 14px; font-weight: normal; font-style: italic; font-size: clamp(30px, 6vw, 42px); }
+    .balk { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+
+    a { color: var(--ink); }
+    .terug { font-family: var(--sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none;
+             border: 1px solid var(--ink); padding: 11px 14px; }
+    .terug:hover { background: var(--ivoor2); }
+    input { padding: 10px 12px; font-family: var(--serif); font-size: 1.1rem; border-radius: 0; border: 1px solid var(--lijn);
+            border-bottom-color: var(--ink); background: #fff; color: var(--ink); }
+    input:focus-visible, a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+    section { background: #fff; border: 1px solid var(--lijn); padding: 22px 24px; }
+    h2 { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; font-weight: normal; font-style: italic; font-size: 1.45rem; }
+    h2::after { content: ""; flex: 1; height: 1px; background: var(--ink); }
+    table { width: 100%; border-collapse: collapse; font-size: 1.02rem; }
+    th { font-family: var(--sans); font-weight: normal; text-transform: uppercase; letter-spacing: 0.14em; font-size: 11px; color: var(--grijs);
+         border-bottom: 1px solid var(--ink) !important; }
+    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--ivoor2); }
+    td { font-variant-numeric: oldstyle-nums tabular-nums; }
     th:not(:first-child), td:not(:first-child) { text-align: right; }
-    tr.totaalrij td { font-weight: bold; border-top: 2px solid #e94560; }
-    .fout { color: #ff4c4c; }
-    .leeg { color: #aaa; }
+    tr.totaalrij td { font-size: 1.15rem; border-top: 3px double var(--ink); border-bottom: 0; }
+    tr.totaalrij td:first-child { font-style: italic; }
+    .fout { color: var(--fout); text-align: center; margin: 0; }
+    .fout:empty { display: none; }
+    .leeg { color: var(--grijs); font-style: italic; margin: 0; }
+
+    @media (max-width: 520px) {
+      body { padding: 20px 12px 36px; }
+      section { padding: 16px 14px; }
+    }
   </style>
 </head>
 <body>
   <main>
     <header>
+      <span class="wapen"><img src="assets/clublogo.png" alt="Clublogo KVC De Toekomst Borsbeke"></span>
+      <span class="sc">KVC De Toekomst Borsbeke · Kantine</span>
       <h1>Dashboard</h1>
-      <input type="date" id="dag" onchange="laadDashboard()">
-      <a href="index.html">Terug naar kassa</a>
+      <div class="balk">
+        <input type="date" id="dag" onchange="laadDashboard()" aria-label="Dag">
+        <a href="index.html" class="terug">Terug naar kassa</a>
+      </div>
     </header>
     <p id="fout" class="fout"></p>
 

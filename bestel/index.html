@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Bestellen – toon de QR aan de kassa</title>
+  <link rel="stylesheet" href="bestel.css">
+</head>
+<body>
+
+  <!-- Bestellen -->
+  <div id="bestel-scherm">
+    <header class="kop">
+      <h1>Bestellen</h1>
+      <p>Kies je artikelen en toon de QR aan de kassa.</p>
+      <nav id="tabs" class="tabs"></nav>
+    </header>
+
+    <main id="lijst" class="lijst"></main>
+
+    <footer class="voet">
+      <div class="voet-tekst">
+        <div>Totaal: <strong id="totaal">€0,00</strong></div>
+        <small id="totaal-extra"></small>
+      </div>
+      <button id="maak-qr" class="hoofd-knop" disabled>Maak QR-code</button>
+    </footer>
+  </div>
+
+  <!-- QR fullscreen -->
+  <div id="qr-scherm" class="qr-scherm verborgen">
+    <h2>Toon deze QR aan de kassa</h2>
+    <div id="qr-code" class="qr-code"></div>
+    <div id="qr-samenvatting" class="qr-samenvatting"></div>
+    <div class="qr-knoppen">
+      <button id="qr-terug" class="knop">Terug</button>
+      <button id="qr-nieuw" class="knop knop-licht">Nieuwe bestelling</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Bij het bouwen gekopieerd uit de root (netlify.toml); lokaal: kopieer ze tijdelijk. -->
+  <script src="producten.js"></script>
+  <script src="bestelcode.js"></script>
+  <script src="bestel.js"></script>
+</body>
+</html>

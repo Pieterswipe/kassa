@@ -105,11 +105,53 @@ function toonOnthoudenPrijzen() {
   const P = window.KassaPrijzen;
   if (!P) return;
   const geleerd = P.leesGeleerd();
-  document.querySelectorAll('[onclick^="voegToeVraagPrijs("]').forEach(knop => {
-    const m = /voegToeVraagPrijs\('(.*)'\)/.exec(knop.getAttribute('onclick'));
-    const cent = m && P.geleerdePrijs(m[1], geleerd);
+  document.querySelectorAll('.item-knop[data-vraag-prijs]').forEach(knop => {
+    const cent = P.geleerdePrijs(knop.dataset.naam, geleerd);
     knop.querySelector('.knop-prijs').textContent = cent ? euro(cent) : 'prijs?';
     knop.classList.toggle('zonder-prijs', !cent);
   });
 }
+
+// Bouwt de tabs en productknoppen uit producten.js (window.KASSA_PRODUCTEN / KASSA_CATEGORIEEN).
+// Knop met vaste prijs -> voegToe(naam, prijs); zonder prijs -> voegToeVraagPrijs(naam).
+function bouwProductKnoppen() {
+  const tabs = document.getElementById('tabs');
+  const vak = document.getElementById('knoppen-vak');
+  const producten = window.KASSA_PRODUCTEN, categorieen = window.KASSA_CATEGORIEEN;
+  if (!tabs || !vak || !producten || !categorieen) return;
+  tabs.replaceChildren();
+  vak.replaceChildren();
+  categorieen.forEach((c, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'tab' + (i === 0 ? ' actief' : '');
+    tab.textContent = c.titel;
+    tab.addEventListener('click', () => toonCategorie(c.id, tab));
+    tabs.appendChild(tab);
+
+    const cat = document.createElement('div');
+    cat.id = c.id;
+    cat.className = 'categorie' + (i === 0 ? '' : ' verborgen');
+    producten.filter(p => p.categorie === c.id).forEach(p => {
+      const knop = document.createElement('button');
+      knop.className = 'item-knop';
+      knop.dataset.naam = p.naam;
+      knop.dataset.id = p.id;
+      const prijs = document.createElement('span');
+      prijs.className = 'knop-prijs';
+      if (p.prijs != null) {
+        prijs.textContent = '€' + p.prijs.toFixed(2).replace('.', ',');
+        knop.addEventListener('click', () => voegToe(p.naam, p.prijs));
+      } else {
+        prijs.textContent = 'prijs?';
+        knop.classList.add('zonder-prijs');
+        knop.dataset.vraagPrijs = '1';
+        knop.addEventListener('click', () => voegToeVraagPrijs(p.naam));
+      }
+      knop.append(p.naam, document.createElement('br'), prijs);
+      cat.appendChild(knop);
+    });
+    vak.appendChild(cat);
+  });
+}
+bouwProductKnoppen();
 toonOnthoudenPrijzen();

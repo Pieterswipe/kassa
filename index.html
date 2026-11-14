@@ -31,6 +31,11 @@
         <h2>De kaart</h2>
         <span class="sc">Kantine De Vrede</span>
       </div>
+      <!-- Scannen staat vooraan: meteen zichtbaar boven tabs en raster (gsm én tablet) -->
+      <div id="scan-balk" class="scan-balk">
+        <button type="button" class="scan-knop" onclick="if (window.openBonScan) openBonScan(); else alert('De bonscanner kon niet geladen worden. Herlaad de pagina.')">📷 Scan bon</button>
+        <button type="button" id="kb-knop" class="scan-knop bestel-scan-knop" onclick="if (window.openBestelScan) openBestelScan(); else alert('De bestelscanner kon niet geladen worden. Herlaad de pagina.')">📲 Scan bestelling</button>
+      </div>
       <!-- Korte tabs boven een dicht raster. Tabs, bijschrift en productknoppen worden opgebouwd
            uit producten.js (bouwProductKnoppen in kassa.js).
            Knop met vaste prijs: voegToe(naam, prijs). Knop zonder prijs: voegToeVraagPrijs(naam)
@@ -52,10 +57,6 @@
       <div class="totaal"><span class="sc">Totaal</span> <span id="totaal">€0,00</span></div>
       <button class="afrekenen-knop" onclick="afrekenen()">Afrekenen</button>
       <button class="sd-knop" onclick="openSwipedrinks()">Swipedrinks</button>
-      <div class="bon-rij">
-        <button class="scan-knop" onclick="if (window.openBonScan) openBonScan(); else alert('De bonscanner kon niet geladen worden. Herlaad de pagina.')">📷 Scan bon</button>
-        <button id="kb-knop" class="scan-knop bestel-scan-knop" onclick="if (window.openBestelScan) openBestelScan(); else alert('De bestelscanner kon niet geladen worden. Herlaad de pagina.')">📲 Scan bestelling</button>
-      </div>
       <div class="bon-rij">
         <button id="rek-knop" class="rek-knop" onclick="rekeningKnop()">Rekening</button>
         <button class="rek-knop" onclick="toonOpenRekeningen()">Openstaande rekeningen</button>

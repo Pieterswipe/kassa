@@ -34,7 +34,7 @@
       <!-- Scannen staat vooraan: meteen zichtbaar boven tabs en raster (gsm én tablet) -->
       <div id="scan-balk" class="scan-balk">
         <button type="button" class="scan-knop" onclick="if (window.openBonScan) openBonScan(); else alert('De bonscanner kon niet geladen worden. Herlaad de pagina.')">📷 Scan bon</button>
-        <button type="button" id="kb-knop" class="scan-knop bestel-scan-knop" onclick="if (window.openBestelScan) openBestelScan(); else alert('De bestelscanner kon niet geladen worden. Herlaad de pagina.')">📲 Scan bestelling</button>
+        <button type="button" id="kb-knop" class="scan-knop bestel-scan-knop" onclick="if (window.openBestelScan) openBestelScan(); else alert('De bestelscanner kon niet geladen worden. Herlaad de pagina.')">📲 Scan QR klant</button>
       </div>
       <!-- Korte tabs boven een dicht raster. Tabs, bijschrift en productknoppen worden opgebouwd
            uit producten.js (bouwProductKnoppen in kassa.js).
@@ -224,7 +224,7 @@
        Na een geldige code volgt het controlescherm van de bonscanner (bs-controle). -->
   <div id="kb-overlay" class="sd-overlay verborgen">
     <div class="sd-scherm">
-      <h2>Scan bestelling</h2>
+      <h2>Scan QR klant</h2>
       <div id="kb-camera"></div>
       <p id="kb-status" class="sd-wacht"></p>
       <p id="kb-fout" class="bs-fout verborgen"></p>

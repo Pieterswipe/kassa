@@ -1,5 +1,7 @@
 // Gedeelde helpers voor de pay.nl-functies. Logt nooit secrets.
 const BASE = process.env.PAYNL_CONNECT_BASE || 'https://connect.pay.nl/v1';
+// REST API (Transaction:Info), zelfde Basic auth
+const REST_BASE = process.env.PAYNL_REST_BASE || 'https://rest.pay.nl/v2';
 
 function json(statusCode, obj) {
   return {
@@ -43,4 +45,17 @@ async function paynl(path, options) {
   return { res, data };
 }
 
-module.exports = { json, heeftAuth, NIET_INGESTELD, korteFout, paynl };
+async function paynlRest(path, options) {
+  const res = await fetch(REST_BASE + path, {
+    ...options,
+    headers: {
+      'Authorization': authHeader(),
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  });
+  const data = await res.json().catch(() => null);
+  return { res, data };
+}
+
+module.exports = { json, heeftAuth, NIET_INGESTELD, korteFout, paynl, paynlRest };

@@ -183,8 +183,18 @@ async function vervangItems(orderId, items) {
 
 // --- Bancontact via pay.nl ---
 
-async function startBancontact(mode) {
+// zonderApp2App: true = altijd via paynl-start (terugval als PAY.POS niet kan)
+async function startBancontact(mode, zonderApp2App) {
   if (bon.length === 0) return;
+  // In de Android-app: terminal via PAY.POS op dit toestel. QR en de browser blijven via paynl-start.
+  if (mode === 'terminal' && !zonderApp2App && heeftPaynlBrug()) {
+    stopBancontact();
+    const sessie = bcSessie;
+    toonWacht('Bancontact', 'Betaling starten...', true);
+    const kan = await app2appBeschikbaar();
+    if (sessie !== bcSessie) return;
+    if (kan) return startBancontactApp2App();
+  }
   stopBancontact();
   const sessie = bcSessie;
   toonWacht('Bancontact', 'Betaling starten...', true);
@@ -281,9 +291,15 @@ function opnieuwControleren() {
 }
 
 // Annuleer tijdens het wachten: lopende pay.nl-betaling afbreken, anders gewoon sluiten.
+// App2App heeft geen pay.nl-order om af te breken: enkel stoppen en de brug vrijgeven.
 async function annuleerWacht() {
   const id = bcActief;
-  if (!id) { sluitBetalen(); return; }
+  if (!id) {
+    if (a2aActief && a2aActief.sessie === bcSessie) brugStuur('clear-open', { attemptId: a2aActief.attemptId });
+    a2aActief = null;
+    sluitBetalen();
+    return;
+  }
   stopBancontact();
   toonWacht('Bancontact', 'Betaling annuleren...', false);
   try {
@@ -303,6 +319,303 @@ function stopBancontact() {
   bcInFlight = false;
   if (bcTimer) { clearInterval(bcTimer); bcTimer = null; }
 }
+
+// --- Bancontact via PAY.POS (App2App, enkel in de Android-app) ---
+// De app geeft window.AndroidPaynl (postMessage met JSON). Zonder die brug, zonder PAY.POS
+// of met NFC uit blijft alles via paynl-start. De return uit PAY.POS is maar een hint:
+// enkel /api/paynl-app2app-verify (pay.nl Transaction:Info) beslist of er betaald is.
+
+let a2aActief = null;        // { sessie, attemptId, nonce, reference, amountCents }
+let brugKlaar = false;
+let brugTeller = 0;
+const brugWacht = {};        // requestId -> resolve
+const a2aBehandeld = {};     // nonce -> true (geen dubbele verwerking van dezelfde return)
+
+const A2A_FOUTEN = {
+  CANCEL: 'Betaling geannuleerd',
+  CANCELLED: 'Betaling geannuleerd',
+  CANCELED: 'Betaling geannuleerd',
+  DENIED: 'Betaling geweigerd',
+  DECLINED: 'Betaling geweigerd',
+  FAILED: 'Betaling mislukt',
+  FAILURE: 'Betaling mislukt',
+  ERROR: 'Betaling mislukt',
+  EXPIRED: 'Betaling verlopen'
+};
+const A2A_POGINGEN_KEY = 'kassa_a2a_pogingen';
+
+function heeftPaynlBrug() {
+  return typeof window !== 'undefined' && Boolean(window.AndroidPaynl) &&
+    typeof window.AndroidPaynl.postMessage === 'function';
+}
+
+// Luisteren en één keer "ready" sturen (dan pusht de app een gebufferde return)
+function brugStart() {
+  if (brugKlaar || !heeftPaynlBrug()) return;
+  brugKlaar = true;
+  const brug = window.AndroidPaynl;
+  if (typeof brug.addEventListener === 'function') brug.addEventListener('message', brugBericht);
+  else brug.onmessage = brugBericht;
+  brugStuur('ready');
+}
+
+// Bericht naar de app; geeft het requestId terug (null als posten mislukt)
+function brugStuur(type, extra, requestId) {
+  if (!heeftPaynlBrug()) return null;
+  requestId = requestId || 'r' + (++brugTeller) + '-' + Date.now();
+  try {
+    window.AndroidPaynl.postMessage(JSON.stringify(Object.assign({ type: type, requestId: requestId }, extra || {})));
+  } catch (err) {
+    return null;
+  }
+  return requestId;
+}
+
+// Vraag met antwoord; null bij timeout of als de brug niet antwoordt
+function brugVraag(type, extra, wachtMs) {
+  brugStart();
+  const requestId = 'r' + (++brugTeller) + '-' + Date.now();
+  return new Promise(resolve => {
+    const timer = setTimeout(() => { delete brugWacht[requestId]; resolve(null); }, wachtMs);
+    brugWacht[requestId] = msg => { clearTimeout(timer); resolve(msg); };
+    if (!brugStuur(type, extra, requestId)) brugBericht({ data: { requestId: requestId, type: 'error' } });
+  });
+}
+
+function brugBericht(ev) {
+  let msg = ev && ev.data !== undefined ? ev.data : ev;
+  if (typeof msg === 'string') {
+    try { msg = JSON.parse(msg); } catch (err) { return; }
+  }
+  if (!msg || typeof msg !== 'object') return;
+  if (msg.requestId && brugWacht[msg.requestId]) {
+    const resolve = brugWacht[msg.requestId];
+    delete brugWacht[msg.requestId];
+    resolve(msg);
+  }
+  if (msg.type === 'return') a2aOntvang(msg);
+}
+
+// Enkel PAY.POS gebruiken als het geïnstalleerd is en NFC aan staat
+async function app2appBeschikbaar() {
+  if (!heeftPaynlBrug()) return false;
+  const st = await brugVraag('getStatus', null, 1500);
+  return Boolean(st && st.type === 'status' && st.installed === true && st.nfcEnabled === true);
+}
+
+// Pogingen onthouden (bedrag en referentie) voor een return die pas na herladen binnenkomt
+function leesPogingen() {
+  try { return JSON.parse(localStorage.getItem(A2A_POGINGEN_KEY) || '{}') || {}; } catch (err) { return {}; }
+}
+
+function bewaarPoging(p) {
+  try {
+    const alle = leesPogingen();
+    alle[p.nonce] = { attemptId: p.attemptId, reference: p.reference, amountCents: p.amountCents, t: Date.now() };
+    const nonces = Object.keys(alle).sort((a, b) => alle[b].t - alle[a].t).slice(0, 5);
+    const kort = {};
+    nonces.forEach(n => { kort[n] = alle[n]; });
+    localStorage.setItem(A2A_POGINGEN_KEY, JSON.stringify(kort));
+  } catch (err) { /* geen opslag: enkel geheugen */ }
+}
+
+function wisPoging(nonce) {
+  try {
+    const alle = leesPogingen();
+    delete alle[nonce];
+    localStorage.setItem(A2A_POGINGEN_KEY, JSON.stringify(alle));
+  } catch (err) { /* niets */ }
+}
+
+// Poging afgesloten: return bevestigen en de brug vrijgeven
+function a2aAfsluiten(nonce, attemptId) {
+  brugStuur('return-ack', { nonce: nonce });
+  if (attemptId) brugStuur('clear-open', { attemptId: attemptId });
+  wisPoging(nonce);
+}
+
+async function startBancontactApp2App() {
+  if (bon.length === 0) return;
+  stopBancontact();
+  const sessie = bcSessie;
+  const amountCents = bonTotaalCents();
+  toonWacht('Bancontact', 'Betaling starten...', true);
+
+  let prep;
+  try {
+    const res = await fetch('/api/paynl-app2app-prepare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amountCents: amountCents, testMode: false })
+    });
+    prep = await res.json().catch(() => ({}));
+    if (sessie !== bcSessie) return;
+    if (res.status === 503) throw new Error('Bancontact is nog niet ingesteld');
+    if (!res.ok || !prep.attemptId || !prep.nonce || !prep.payload) throw new Error(prep.error || 'Fout ' + res.status);
+  } catch (err) {
+    if (sessie !== bcSessie) return;
+    toonFout(err.message === 'Bancontact is nog niet ingesteld' ? err.message : 'Bancontact starten mislukt: ' + err.message);
+    return;
+  }
+
+  const poging = { sessie: sessie, attemptId: prep.attemptId, nonce: prep.nonce, reference: prep.reference, amountCents: amountCents };
+  a2aActief = poging;
+  bewaarPoging(poging);
+
+  const r = await brugVraag('open', { attemptId: poging.attemptId, nonce: poging.nonce, payload: prep.payload }, 10000);
+  if (sessie !== bcSessie) {
+    // Intussen geannuleerd: brug meteen weer vrijgeven
+    if (r && r.ok) brugStuur('clear-open', { attemptId: poging.attemptId });
+    return;
+  }
+  if (!r) {
+    a2aActief = null;
+    toonFout('PAY.POS reageert niet. Kijk in PAY.POS of er een betaling loopt voor je opnieuw probeert.',
+      () => startBancontact('terminal'));
+    return;
+  }
+  if (!r.ok) {
+    a2aActief = null;
+    wisPoging(poging.nonce);
+    const fout = r.error || '';
+    if (fout === 'APP_NOT_INSTALLED' || fout === 'NFC_OFF' || fout === 'FEATURE_UNSUPPORTED') {
+      startBancontact('terminal', true); // terugval: cloud-terminal via paynl-start
+      return;
+    }
+    if (fout === 'BUSY') {
+      brugStuur('drain'); // een gebufferde return van de vorige poging afhandelen
+      toonFout('PAY.POS is nog bezig met een vorige betaling. Rond die eerst af in PAY.POS.',
+        () => startBancontact('terminal'));
+    } else if (fout === 'OPEN_FAILED') {
+      toonFout('PAY.POS kon niet geopend worden.', () => startBancontact('terminal'));
+    } else if (fout === 'INVALID_REQUEST') {
+      toonFout('PAY.POS weigerde de betaalopdracht.', () => startBancontact('terminal'));
+    } else {
+      toonFout('PAY.POS starten mislukt' + (fout ? ' (' + fout + ')' : ''), () => startBancontact('terminal'));
+    }
+    return;
+  }
+  toonWacht('Bancontact', 'Volg de instructies in PAY.POS...', true);
+}
+
+// Return uit PAY.POS (gepusht door de app, of als antwoord op "drain")
+function a2aOntvang(msg) {
+  const nonce = String(msg.nonce || '');
+  if (!/^[0-9a-f]{32}$/.test(nonce) || a2aBehandeld[nonce]) return;
+  a2aBehandeld[nonce] = true;
+  const params = msg.params && typeof msg.params === 'object' ? msg.params : {};
+  const poging = a2aActief;
+  if (poging && poging.nonce === nonce && poging.sessie === bcSessie) a2aAfronden(poging, params);
+  else a2aWees(nonce, params);
+}
+
+async function a2aVerifieer(id, reference, amountCents) {
+  const res = await fetch('/api/paynl-app2app-verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId: id, reference: reference || undefined, amountCents: amountCents || undefined })
+  });
+  const data = await res.json().catch(() => ({}));
+  return { res, data };
+}
+
+const a2aPauze = ms => new Promise(r => setTimeout(r, ms));
+
+// Lopende poging afhandelen: pay.nl vragen, enkel bij paid === true boeken
+async function a2aAfronden(poging, params) {
+  const sessie = bcSessie;
+  toonWacht('Bancontact', 'Betaling controleren...', false);
+  const id = String(params.orderId || params.id || '');
+  const hint = String(params.statusAction || '').toUpperCase();
+
+  if (!id) {
+    a2aActief = null;
+    a2aAfsluiten(poging.nonce, poging.attemptId);
+    toonFout(A2A_FOUTEN[hint] || 'Geen transactie van PAY.POS ontvangen. Kijk in PAY.POS of er betaald is.');
+    return;
+  }
+
+  // pay.nl kan net iets later zijn dan PAY.POS: even opnieuw vragen zolang het niet definitief is
+  let data = null;
+  for (let i = 0; i < 5; i++) {
+    if (i) await a2aPauze(BC_POLL_MS);
+    if (sessie !== bcSessie) return;
+    try {
+      const v = await a2aVerifieer(id, poging.reference, poging.amountCents);
+      if (sessie !== bcSessie) return;
+      if (v.res.status === 503) {
+        a2aActief = null;
+        delete a2aBehandeld[poging.nonce];
+        toonFout('Bancontact is nog niet ingesteld');
+        return;
+      }
+      if (!v.res.ok) continue;
+      data = v.data;
+      const action = String(data.action || '').toUpperCase();
+      if (data.paid === true || data.check || A2A_FOUTEN[action]) break;
+    } catch (err) {
+      // netwerkfout: opnieuw proberen
+    }
+  }
+  if (sessie !== bcSessie) return;
+
+  const action = data ? String(data.action || '').toUpperCase() : '';
+  if (data && data.paid === true) {
+    a2aActief = null;
+    a2aAfsluiten(poging.nonce, poging.attemptId);
+    toonWacht('Betaald', 'Betaling opslaan...', false);
+    if (await bewaarBetaling('bancontact_terminal', data.id || id)) toonOk('Betaald met ' + BETAALMIDDELEN.bancontact_terminal);
+  } else if (data && data.check) {
+    a2aActief = null;
+    a2aAfsluiten(poging.nonce, poging.attemptId);
+    toonFout('Bedrag of referentie bij pay.nl klopt niet met deze bon. Niet geboekt, kijk in PAY.POS.');
+  } else if (A2A_FOUTEN[action]) {
+    a2aActief = null;
+    a2aAfsluiten(poging.nonce, poging.attemptId);
+    toonFout(A2A_FOUTEN[action]);
+  } else {
+    // Nog niet zeker: niets boeken, niets vrijgeven; opnieuw laten controleren.
+    // De return blijft gebufferd in de app, een latere "drain" mag ze opnieuw afhandelen.
+    delete a2aBehandeld[poging.nonce];
+    toonFout('Betaling nog niet bevestigd door pay.nl. Niet opnieuw laten betalen.',
+      () => a2aAfronden(poging, params), 'Status opnieuw controleren');
+  }
+}
+
+// Return zonder lopende poging (na herladen of na Annuleer): nakijken en waarschuwen, niet zomaar boeken
+async function a2aWees(nonce, params) {
+  const bekend = leesPogingen()[nonce] || null;
+  const id = String(params.orderId || params.id || '');
+  if (!id) {
+    a2aAfsluiten(nonce, bekend && bekend.attemptId);
+    return;
+  }
+  let data;
+  try {
+    const v = await a2aVerifieer(id, bekend && bekend.reference, bekend && bekend.amountCents);
+    if (!v.res.ok) throw new Error();
+    data = v.data;
+  } catch (err) {
+    delete a2aBehandeld[nonce]; // blijft gebufferd in de app; volgende "drain" of herladen probeert opnieuw
+    return;
+  }
+  a2aAfsluiten(nonce, bekend && bekend.attemptId);
+  if (data.paid !== true) return;
+
+  const bedrag = data.amountCents || (bekend && bekend.amountCents) || 0;
+  const tekst = 'Let op: een eerdere PAY.POS-betaling van ' + euro(bedrag) + ' is betaald maar niet geboekt (' +
+    id + '). Niet opnieuw laten betalen.';
+  const kanBoeken = bon.length > 0 && bonTotaalCents() === bedrag;
+  toonFout(tekst, kanBoeken ? () => opnieuwOpslaan('bancontact_terminal', data.id || id) : null, 'Boeken op deze bon');
+}
+
+// Terug in de kassa na PAY.POS: gebufferde return ophalen
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && a2aActief) brugStuur('drain');
+  });
+}
+brugStart();
 
 // --- Rekeningen ---
 

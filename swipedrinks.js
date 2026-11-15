@@ -16,6 +16,26 @@ let sdFlowStarted = false;
 let sdScanHandled = false;
 let sdSessie = 0;              // stijgt bij openen/sluiten, voorkomt late callbacks
 
+// --- Tokenbedrag (op de cent: €1,85 = 1,85 tokens) ---
+
+function sdTokensVoorTotaal(totaal) {
+  return Math.round(totaal * 100) / 100;
+}
+
+function sdTokensTekst(tokens) {
+  return sdTokensVoorTotaal(tokens).toFixed(2).replace('.', ',');
+}
+
+function sdZelfdeTokens(a, b) {
+  if (a == null || b == null) return false;
+  return Math.round(a * 100) === Math.round(b * 100);
+}
+
+function sdBonTokens() {
+  const totaal = bon.reduce((som, item) => som + item.prijs * item.aantal, 0);
+  return sdTokensVoorTotaal(totaal);
+}
+
 // --- API helper ---
 
 async function sdPost(endpoint, body) {
@@ -40,8 +60,7 @@ async function openSwipedrinks() {
     return;
   }
 
-  const totaal = bon.reduce((som, item) => som + item.prijs * item.aantal, 0);
-  const tokens = Math.round(totaal);
+  const tokens = sdBonTokens();
 
   sdOpening = true;
   sdSessie += 1;
@@ -52,13 +71,13 @@ async function openSwipedrinks() {
 
   document.getElementById('sd-overlay').classList.remove('verborgen');
   toonSdScherm('sd-keuze');
-  document.getElementById('sd-totaal-tokens').textContent = tokens;
-  document.getElementById('sd-totaal-qr').textContent = tokens;
+  document.getElementById('sd-totaal-tokens').textContent = sdTokensTekst(tokens);
+  document.getElementById('sd-totaal-qr').textContent = sdTokensTekst(tokens);
   setFlowButtonsEnabled(false);
   verbergKeuzeFout();
 
   try {
-    if (sdQRCode && sdQRTokens === tokens) {
+    if (sdQRCode && sdZelfdeTokens(sdQRTokens, tokens)) {
       toonKeuzeKlaar();
     } else {
       setKeuzeStatus('QR aanmaken...');
@@ -83,12 +102,13 @@ function opnieuwQRAanmaken() {
 
 async function ensureQR(tokens) {
   if (tokens == null) {
-    const totaal = bon.reduce((som, item) => som + item.prijs * item.aantal, 0);
-    tokens = Math.round(totaal);
+    tokens = sdBonTokens();
+  } else {
+    tokens = sdTokensVoorTotaal(tokens);
   }
 
-  if (sdQRCode && sdQRTokens === tokens) return sdQRCode;
-  if (sdGeneratePromise && sdQRTokens === tokens) return sdGeneratePromise;
+  if (sdQRCode && sdZelfdeTokens(sdQRTokens, tokens)) return sdQRCode;
+  if (sdGeneratePromise && sdZelfdeTokens(sdQRTokens, tokens)) return sdGeneratePromise;
 
   sdQRCode = null;
   sdQRTokens = tokens;
